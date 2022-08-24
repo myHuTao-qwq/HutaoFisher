@@ -60,7 +60,14 @@ jobs:
         cd build
         cmake ..
         cmake --build . --config Release
+    - name: make-archive
+      run: |
+        cd fisher
+        mkdir HutaoFisher
+        mv src/build/Release/fisher.exe HutaoFisher
+        cp resource HutaoFisher
+        7z a HutaoFisher.zip HutaoFisher
     - name: release
       uses: softprops/action-gh-release@v1
       with:
-        files: fisher/src/build/Release/fisher.exe
+        files: fisher/HutaoFisher.zip
