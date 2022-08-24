@@ -2,9 +2,8 @@ name: release
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags:
+      - '*'
 
 jobs:
   windows-x64-gpu:
@@ -38,9 +37,17 @@ jobs:
         Invoke-WebRequest -Uri https://github.com/Tencent/ncnn/releases/download/20220729/ncnn-20220729-windows-vs2019.zip -OutFile ncnn-20220729-windows-vs2019.zip
         7z x ./ncnn-20220729-windows-vs2019.zip
         mv ncnn-20220729-windows-vs2019 ncnn
-    - name: vulkansdk
+    - name: cache-vulkansdk
+      id: cache-vulkansdk
+      with:
+        path: VulkanSDK.exe
+        key: VulkanSDK-1.2.189.0-Installer
+    - name: download-vulkansdk
+      if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
       run: |
         Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.2.189.0/windows/VulkanSDK-1.2.189.0-Installer.exe?Human=true -OutFile VulkanSDK.exe
+    - name: vulkansdk
+      run: |
         $installer = Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
         $installer.WaitForExit();
     - name: build
