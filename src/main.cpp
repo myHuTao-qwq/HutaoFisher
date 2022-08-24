@@ -30,13 +30,6 @@ int main() {
   } else {
     printf("Register hotkey Alt+X fail\n");
   }
-  // // run tests
-  // if (RegisterHotKey(NULL, 2, MOD_ALT,
-  //                    0x41)) {  // 0x41: A, test
-  //   printf("Register hotkey Alt+A success!\n");
-  // } else {
-  //   printf("Register hotkey Alt+A fail\n");
-  // }
 
   printf("please choose whether to use GPU to infer: 1-Y 0:N          ");
   std::cin >> useGPU;
@@ -51,11 +44,6 @@ int main() {
 
   std::thread fishThread(&Fisher::fishing, std::ref(fisher));
   fishThread.detach();
-
-  // // collect data
-
-  // std::thread fishThread(&Fisher::getRodData, std::ref(fisher));
-  // fishThread.detach();
 
   // check log
   bool logAllImgs, logData;
@@ -92,19 +80,6 @@ int main() {
         Beep(G4, 250);
         Beep(E4, 250);
         Beep(C4, 250);
-        break;
-      case 2:
-        continue;  // annotate this line to run fisher test
-        if (fisher.working) {
-          printf("Hotkey Alt+A is pressed, run fisher test!\n");
-          // fisher.testing = false;
-          // fisher.imgCollect();
-          fisher.test();
-        } else {
-          printf(
-              "Hotkey Alt+A is pressed, but fisher isn't "
-              "running!\n");
-        }
         break;
     }
   }

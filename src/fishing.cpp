@@ -776,14 +776,3 @@ void Fisher::fishing() {
 
   return;
 }
-
-void Fisher::test() {
-  clock_t t1 = clock();
-  for (int i = 0; i < 100; i++) {
-    // getBBoxes(false);
-    screenImage = screen->getScreenshot();
-  }
-  clock_t t2 = clock();
-  std::cout << double(t2 - t1) / CLOCKS_PER_SEC << std::endl;
-  return;
-}

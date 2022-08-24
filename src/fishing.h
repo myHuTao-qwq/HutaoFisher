@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
-#include <format>
 #include <fstream>
 #include <random>
 #include <iostream>
@@ -43,7 +42,7 @@ class Fisher {
   const double MaxThrowWaiting = 3;
   const double MaxBiteWaiting[8] = {6, 8.5,  9.5, 10.5,
                                     7, 10.5, 10,  10};  // index is fish label
-  const double MaxControlWaiting = 4;
+  const double MaxControlWaiting = 3;
 
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;
 
@@ -71,9 +70,6 @@ class Fisher {
   void imgLog(char name[], bool bbox);
   void errLog();
 
-  int imgid = 0;
-  int id = 0;
-
  public:
   Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath);
   ~Fisher();
@@ -81,7 +77,6 @@ class Fisher {
   bool working;
   bool logAllImgs = false;
   bool logData = false;
-  bool testing = true;
+
   void fishing();
-  void test();
 };
