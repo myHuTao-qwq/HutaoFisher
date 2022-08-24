@@ -32,7 +32,7 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 - Achieve multi-resolution adaptation. (By scaling the screen to a 1024\*576 intermediate layer for processing, so in theory if you have a resolution higher than 1024\*576 the fisher can work properly)
 
 
- 
+
 
 ## 使用说明 User's Guide
 
@@ -100,32 +100,36 @@ Probably useful images and data are stored in the log folder.
 
 ## 代码与编译 Code and Compilation
 
-老实说，我没学过软件工程，所以我也不知道要怎么合理地构建一个C++项目（
+~~老实说，我没学过软件工程，所以我也不知道要怎么合理地构建一个C++项目（~~
 
-所以不推荐从源代码构建程序：直接下载Release压缩包即可解压即用。
+~~所以不推荐从源代码构建程序：直接下载Release压缩包即可解压即用。~~
 
-源代码位于src文件夹中。用cmake构建可能可以得到程序。
+~~源代码位于src文件夹中。用cmake构建可能可以得到程序。~~
 
-lib文件夹中包含了预编译的ncnn库，若成功编译，要运行程序应将ncnn.dll复制到编译得到的exe文件处。
+~~lib文件夹中包含了预编译的ncnn库，若成功编译，要运行程序应将ncnn.dll复制到编译得到的exe文件处。~~
 
-另外程序还使用了opencv库，若要进行编译还得在电脑上预先安装opencv（或者自己改cmake配置以使用预编译库？实在不想做了orz）（真相是作者装完opencv以后才搞明白了一点如何链接预编译库）
+~~另外程序还使用了opencv库，若要进行编译还得在电脑上预先安装opencv（或者自己改cmake配置以使用预编译库？实在不想做了orz）（真相是作者装完opencv以后才搞明白了一点如何链接预编译库）~~
 
-不过fishing.cpp里面包含了一些注释掉的整体调试用的函数，main.cpp里也提供了调试的入口，如果你成功跑通了编译，可以利用这些函数做进一步的调试。
+~~不过fishing.cpp里面包含了一些注释掉的整体调试用的函数，main.cpp里也提供了调试的入口，如果你成功跑通了编译，可以利用这些函数做进一步的调试。~~
+
+你可以根据workflow中的命令自行编译本项目。
 
 至于数据集与网络训练的过程，没什么特色，代码也基本是一坨屎山（想到哪里写哪里），再考虑到挨mhy铁拳的风险，就不开源了(?)
 
 ---
 
-To be honest, I haven't studied software engineering, so I don't know how to build a C++ project correctly.
+~~To be honest, I haven't studied software engineering, so I don't know how to build a C++ project correctly.~~
 
-So it's not recommended to build from source code: just download the Release package, unzip and use it.
+~~So it's not recommended to build from source code: just download the Release package, unzip and use it.~~
 
-The source code is located in the src folder. It may be possible to get a executive program by building with cmake.
+~~The source code is located in the src folder. It may be possible to get a executive program by building with cmake.~~
 
-The lib folder contains the pre-compiled ncnn library. To run the program, copy ncnn.dll to the compiled exe file.
+~~The lib folder contains the pre-compiled ncnn library. To run the program, copy ncnn.dll to the compiled exe file.~~
 
-In addition, the program uses the OpenCV library. To compile, you have to install OpencV on your computer in advance (or change the cmake configuration to use a precompiled library? I'm so tired to do that ORZ) (the fact is that the author didn't figure out how to link a precompiled library until after installing OpencV)
+~~In addition, the program uses the OpenCV library. To compile, you have to install OpencV on your computer in advance (or change the cmake configuration to use a precompiled library? I'm so tired to do that ORZ) (the fact is that the author didn't figure out how to link a precompiled library until after installing OpencV)~~
 
-However, fishing.cpp contains some annotated functions for overall debugging, and main.cpp also provides a debug entry. If you achieve the compilation, they may help in further debugging.
+~~However, fishing.cpp contains some annotated functions for overall debugging, and main.cpp also provides a debug entry. If you achieve the compilation, they may help in further debugging.~~
+
+You can compile this project by referring to the GitHub workflow.
 
 As for the data set and network training process, there is no highlight, and the code is basically a mountain of shit (write as I think), and considering the risk of being beaten by mihoyo, so please let me not to open the source code (?)
