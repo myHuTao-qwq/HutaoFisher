@@ -63,13 +63,13 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
   fishnetRatio[0] = double(fishNet->input_size[1]) / processShape[0];
   fishnetRatio[1] = double(fishNet->input_size[0]) / processShape[1];
 
-  hookImg = cv::imread(imgPath + "\\hook.png", cv::IMREAD_GRAYSCALE);
-  pullImg = cv::imread(imgPath + "\\pull.png", cv::IMREAD_GRAYSCALE);
+  hookImg = cv::imread(imgPath + "/hook.png", cv::IMREAD_GRAYSCALE);
+  pullImg = cv::imread(imgPath + "/pull.png", cv::IMREAD_GRAYSCALE);
   centralBarImg =
-      cv::imread(imgPath + "\\centralBar.png", cv::IMREAD_GRAYSCALE);
-  cursorImg = cv::imread(imgPath + "\\cursor.png", cv::IMREAD_GRAYSCALE);
-  leftEdgeImg = cv::imread(imgPath + "\\leftEdge.png", cv::IMREAD_GRAYSCALE);
-  rightEdgeImg = cv::imread(imgPath + "\\rightEdge.png", cv::IMREAD_GRAYSCALE);
+      cv::imread(imgPath + "/centralBar.png", cv::IMREAD_GRAYSCALE);
+  cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
+  leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
+  rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
 
   return;
 }
@@ -463,6 +463,7 @@ void Fisher::throwRod() {
           fishFailNum++;
           double ang = angDistrib(engine);
           mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), -90 + 90 * sin(ang));
+          break;
         }
       case 0:  // the rod is at a proper position
         printf(
@@ -553,7 +554,7 @@ void Fisher::checkBite() {
       std::ofstream data;
       data.open(logPath + "\\data.csv", std::ios::app);
       char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d", time(0),
+      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d", int(time(0)),
               rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1, targetFish.x2,
               targetFish.y1, targetFish.y2, targetFish.label - 2, biteState);
       data << output << std::endl;
@@ -692,7 +693,7 @@ void Fisher::imgLog(char name[], bool bbox) {
       cv::Scalar(255, 255, 255), -1);
 
   char filename[256];
-  sprintf(filename, "%s\\images\\%d_%s_orig.png", logPath.c_str(), logTime,
+  sprintf(filename, "%s/images/%d_%s_orig.png", logPath.c_str(), int(logTime),
           name);
   cv::imwrite(filename, screenImage);
 
@@ -707,8 +708,8 @@ void Fisher::imgLog(char name[], bool bbox) {
     cv::putText(bboxed_img, "target: " + labels[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
-    sprintf(bbox_filename, "%s\\images\\%d_%s_bbox.png", logPath.c_str(),
-            logTime, name);
+    sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),
+            int(logTime), name);
     cv::imwrite(bbox_filename, bboxed_img);
   }
 
@@ -728,7 +729,7 @@ void Fisher::fishing() {
     fishingFailCnt = 0;
     try {
       while (!working) {
-        continue;  // wait for fisher launch
+        Sleep(100); // wait for fisher launch
       }
       while (working && (fishingFailCnt < 3) && scanFish()) {
         printf("Fisher: Begin to try to catch a fish!\n");
@@ -771,177 +772,6 @@ void Fisher::fishing() {
                    "manually aborted!\n";
       continue;
     }
-  }
-
-  return;
-}
-
-void Fisher::showimg() {
-  object_rect effect_roi;
-  effect_roi.x = 0;
-  effect_roi.y = 0;
-  effect_roi.width = processShape[0];
-  effect_roi.height = processShape[1];
-  cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
-
-  cv::Mat show_img, show_bbox_img;
-  cv::resize(bboxed_img, show_bbox_img, cv::Size(1280, 720));
-  cv::resize(screenImage, show_img, cv::Size(1280, 720));
-  cv::imshow("bbox", show_bbox_img);
-  cv::imshow("origin", show_img);
-  cv::waitKey(0);
-  cv::destroyAllWindows();
-
-  // Sleep(2000);
-  return;
-}
-
-void Fisher::getRodData() {
-  while (true) {
-    if (working) {
-      while (testing) {
-        Sleep(10);
-      }
-      testing = true;
-
-      Beep(C4, 250);
-      Beep(G4, 250);
-
-      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
-
-      while (testing) {
-        Sleep(10);
-      }
-      testing = true;
-
-      Beep(C4, 250);
-      Beep(G4, 250);
-
-      getBBoxes(false);
-
-      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
-
-      Sleep(3000);
-
-      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
-      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
-
-      object_rect effect_roi;
-      effect_roi.x = 0;
-      effect_roi.y = 0;
-      effect_roi.width = processShape[0];
-      effect_roi.height = processShape[1];
-      cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
-
-      cv::Mat show_img, show_bbox_img;
-      cv::resize(bboxed_img, show_bbox_img, cv::Size(1600, 900));
-      // cv::resize(screenImage, show_img, cv::Size(1600, 900));
-      cv::imshow("bbox", show_bbox_img);
-      // cv::imshow("origin", show_img);
-      cv::waitKey(0);
-      cv::destroyAllWindows();
-
-      std::vector<BoxInfo> rods;
-      for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
-           i++) {
-        if (i->label == 0) {
-          rods.push_back(*i);
-          bboxes.erase(i);
-        }
-      }
-
-      if (rods.empty()) {
-        printf("error: no rods!\n");
-        char bbox_filename[256], filename[256];
-        time_t t = time(0);
-        sprintf(bbox_filename, "../../dataset/images/%d_bbox.png", t);
-        sprintf(filename, "../../dataset/images/%d_orig.png", t);
-        cv::imwrite(bbox_filename, bboxed_img);
-        cv::imwrite(filename, screenImage);
-        imgid++;
-        return;
-      }
-
-      BoxInfo rod = *std::max_element(rods.begin(), rods.end(),
-                                      [](BoxInfo bbox1, BoxInfo bbox2) {
-                                        return bbox1.score < bbox2.score;
-                                      });  // find the most confident rod;
-
-      BoxInfo fish = *std::min_element(
-          bboxes.begin(), bboxes.end(), [rod](BoxInfo bbox1, BoxInfo bbox2) {
-            return bboxDist(rod, bbox1) < bboxDist(rod, bbox2);
-          });  // find the closest fish
-
-      std::cout << "nearest fish: " << labels[fish.label] << std::endl;
-
-      int success;
-      printf("Successed? 0: success 1: too close 2: too far              ");
-      std::cin >> success;
-
-      int save_results;
-      printf("save results? 0: save results 1:save picture else: skip    ");
-      std::cin >> save_results;
-      if (save_results == 1) {
-        char bbox_filename[256], filename[256];
-        time_t t = time(0);
-        sprintf(bbox_filename, "../../dataset/images/%d_bbox.png", t);
-        sprintf(filename, "../../dataset/images/%d_orig.png", t);
-        cv::imwrite(bbox_filename, bboxed_img);
-        cv::imwrite(filename, screenImage);
-        imgid++;
-        continue;
-      } else if (save_results != 0) {
-        continue;
-      }
-
-      // data collect----------------------------------------------------
-      std::ofstream data;
-      data.open(
-          "C:\\Users\\LGA11\\Coding\\genshin_auto_fish_"
-          "v2\\deploy\\dataset\\data."
-          "csv",
-          std::ios::app);
-      char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d", time(0),
-              rod.x1, rod.x2, rod.y1, rod.y2, fish.x1, fish.x2, fish.y1,
-              fish.y2, fish.label - 2, success);
-      data << output << std::endl;
-      data.close();
-      // data collect----------------------------------------------------
-    }
-  }
-
-  return;
-}
-
-void Fisher::imgCollect() {
-  getBBoxes(false);
-
-  object_rect effect_roi;
-  effect_roi.x = 0;
-  effect_roi.y = 0;
-  effect_roi.width = processShape[0];
-  effect_roi.height = processShape[1];
-  cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
-
-  cv::Mat show_img, show_bbox_img;
-  cv::resize(bboxed_img, show_bbox_img, cv::Size(1600, 900));
-  // cv::resize(screenImage, show_img, cv::Size(1600, 900));
-  cv::imshow("bbox", show_bbox_img);
-  // cv::imshow("origin", show_img);
-  cv::waitKey(0);
-  cv::destroyAllWindows();
-
-  int save_results;
-  printf("save results? 0: save results 1:save picture else: skip    ");
-  std::cin >> save_results;
-  if (save_results == 1) {
-    char bbox_filename[256], filename[256];
-    time_t t = time(0);
-    // sprintf(bbox_filename, "../../dataset/images/%d_bbox.png", t);
-    sprintf(filename, "../../dataset/images/%d_orig.png", t);
-    // cv::imwrite(bbox_filename, bboxed_img);
-    cv::imwrite(filename, screenImage);
   }
 
   return;

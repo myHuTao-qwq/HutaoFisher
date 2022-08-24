@@ -1,2 +1,4 @@
 build/
-log/images/
+.vscode
+.vs
+log

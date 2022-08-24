@@ -1,37 +1,47 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.4.1)
+set(CMAKE_CXX_STANDARD 17)
 
 project(fisher VERSION 0.1.0)
 
-add_subdirectory(utils)
-add_subdirectory(fishnet)
-add_subdirectory(rodnet)
+set(OpenCV_DIR "../../opencv-mobile/x64")
+set(ncnn_INSTALL_DIR "../../ncnn/x64")
+set(ncnn_DIR "${ncnn_INSTALL_DIR}/lib/cmake/ncnn")
+set(ncnn_INCLUDE_DIR "${ncnn_INSTALL_DIR}/include")
 
-include(CTest)
-enable_testing()
-
-set(OpenCV_DIR "C:/Program Files/opencv/build")
+set(OpenCV_STATIC ON)
 
 find_package(OpenCV REQUIRED)
 
-include_directories()
+find_package(ncnn REQUIRED)
+if(NOT TARGET ncnn)
+    message(WARNING "ncnn NOT FOUND!  Please set ncnn_DIR environment variable")
+else()
+    message("ncnn FOUND ")
+endif()
 
-# add_executable(fisher main.cpp getRodData.cpp)
-add_executable(fisher main.cpp fishing.cpp)
-
-target_link_libraries(fisher PUBLIC
-    screenshot
-    nanodet
-    rodnet
+include_directories(
+    ${OpenCV_INCLUDE_DIRS}
+    ${ncnn_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_include_directories(fisher PUBLIC
-    ${PROJECT_BINARY_DIR}
-    ${PROJECT_SOURCE_DIR}
-    ${OpenCV_INCLUDE_DIRS}
-    )
+set(
+    FISHER_SRCS
 
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+    main.cpp
+    fishing.cpp
+    fishnet/nanodet.cpp
+    rodnet/rodnet.cpp
+    utils/screenshot.cpp
+)
 
+add_executable(fisher ${FISHER_SRCS})
 
+SET_TARGET_PROPERTIES(fisher PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
+
+target_link_libraries(
+    fisher
+    ncnn
+    ${OpenCV_LIBS}
+)
