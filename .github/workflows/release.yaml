@@ -39,6 +39,7 @@ jobs:
         mv ncnn-20220729-windows-vs2019 ncnn
     - name: cache-vulkansdk
       id: cache-vulkansdk
+      uses: actions/cache@v3
       with:
         path: VulkanSDK.exe
         key: VulkanSDK-1.2.189.0-Installer
