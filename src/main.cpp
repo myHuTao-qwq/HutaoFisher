@@ -8,9 +8,9 @@
 #include "fishnet/nanodet.h"
 #include "utils/screenshot.h"
 
-const std::string imgPath = "..\\..\\resource\\imgs";
+const std::string imgPath = "../../resource/imgs";
 
-const std::string modelPath = "..\\..\\resource\\model";
+const std::string modelPath = "../../resource/model";
 
 bool useGPU = true;
 
