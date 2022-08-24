@@ -463,6 +463,7 @@ void Fisher::throwRod() {
           fishFailNum++;
           double ang = angDistrib(engine);
           mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), -90 + 90 * sin(ang));
+          break;
         }
       case 0:  // the rod is at a proper position
         printf(
@@ -692,7 +693,7 @@ void Fisher::imgLog(char name[], bool bbox) {
       cv::Scalar(255, 255, 255), -1);
 
   char filename[256];
-  sprintf(filename, "%s\\images\\%d_%s_orig.png", logPath.c_str(), logTime,
+  sprintf(filename, "%s/images/%d_%s_orig.png", logPath.c_str(), int(logTime),
           name);
   cv::imwrite(filename, screenImage);
 
@@ -707,8 +708,8 @@ void Fisher::imgLog(char name[], bool bbox) {
     cv::putText(bboxed_img, "target: " + labels[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
-    sprintf(bbox_filename, "%s\\images\\%d_%s_bbox.png", logPath.c_str(),
-            logTime, name);
+    sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),
+            int(logTime), name);
     cv::imwrite(bbox_filename, bboxed_img);
   }
 
@@ -728,7 +729,7 @@ void Fisher::fishing() {
     fishingFailCnt = 0;
     try {
       while (!working) {
-        continue;  // wait for fisher launch
+        Sleep(100); // wait for fisher launch
       }
       while (working && (fishingFailCnt < 3) && scanFish()) {
         printf("Fisher: Begin to try to catch a fish!\n");

@@ -27,7 +27,7 @@ class Fisher {
  private:
   const int processShape[2] = {1024, 576};
   bool processWithInputShape;
-  const std::string logPath = "../../log";
+  const std::string logPath = "log";
 
   const double steps[40][2] = {
       {0, 2},    {0, 2},    {0, 2},    {0, 2},    {0, -1},   {0, -1},

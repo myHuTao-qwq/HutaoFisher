@@ -8,9 +8,9 @@
 #include "fishnet/nanodet.h"
 #include "utils/screenshot.h"
 
-const std::string imgPath = "../../resource/imgs";
+const std::string imgPath = "resource/imgs";
 
-const std::string modelPath = "../../resource/model";
+const std::string modelPath = "resource/model";
 
 bool useGPU = true;
 
@@ -41,8 +41,8 @@ int main() {
   printf("please choose whether to use GPU to infer: 1-Y 0:N          ");
   std::cin >> useGPU;
 
-  NanoDet fishnet((modelPath + "\\nanodet-fish_mod.param").c_str(),
-                  (modelPath + "\\nanodet-fish_mod.bin").c_str(), useGPU);
+  NanoDet fishnet((modelPath + "/nanodet-fish_mod.param").c_str(),
+                  (modelPath + "/nanodet-fish_mod.bin").c_str(), useGPU);
 
   Screen screen;
   Fisher fisher(&fishnet, &screen, imgPath);

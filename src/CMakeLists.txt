@@ -3,9 +3,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(fisher VERSION 0.1.0)
 
-#set(OpenCV_DIR "../../opencv/build")
 set(OpenCV_DIR "../../opencv-mobile/x64")
-set(ncnn_INSTALL_DIR "../../ncnn/build/install")
+set(ncnn_INSTALL_DIR "../../ncnn/x64")
 set(ncnn_DIR "${ncnn_INSTALL_DIR}/lib/cmake/ncnn")
 set(ncnn_INCLUDE_DIR "${ncnn_INSTALL_DIR}/include")
 
@@ -38,6 +37,8 @@ set(
 )
 
 add_executable(fisher ${FISHER_SRCS})
+
+SET_TARGET_PROPERTIES(fisher PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 
 target_link_libraries(
     fisher
