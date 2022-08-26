@@ -12,7 +12,7 @@
 #include "utils/screenshot.h"
 
 // #define TEST
-// #define RELEAESE
+#define RELEAESE
 
 #define FISH_CLASS_NUM 10
 #define BAIT_CLASS_NUM 5

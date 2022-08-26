@@ -9,7 +9,7 @@
 #include "utils/screenshot.h"
 
 // #define TEST
-// #define RELEAESE
+#define RELEAESE
 
 #ifdef RELEAESE
 const std::string imgPath = "resource/imgs";
