@@ -9,9 +9,9 @@
 #include "utils/screenshot.h"
 
 // #define TEST
-#define RELEAESE
+#define RELEASE
 
-#ifdef RELEAESE
+#ifdef RELEASE
 const std::string imgPath = "resource/imgs";
 const std::string modelPath = "resource/model";
 #else
@@ -38,7 +38,7 @@ int main() {
     printf("Register hotkey Alt+X fail\n");
   }
 
-#if RELEASE
+#ifdef RELEASE
   system("if not exist log\\images mkdir log\\images");
 #endif
 

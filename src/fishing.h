@@ -12,7 +12,7 @@
 #include "utils/screenshot.h"
 
 // #define TEST
-#define RELEAESE
+#define RELEASE
 
 #define FISH_CLASS_NUM 10
 #define BAIT_CLASS_NUM 5
@@ -32,7 +32,7 @@ class Fisher {
  private:
   const int processShape[2] = {1024, 576};
   bool processWithInputShape;
-#ifdef RELEAESE
+#ifdef RELEASE
   const std::string logPath = "log";
 #else
   const std::string logPath = "../../log";
