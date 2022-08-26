@@ -11,7 +11,7 @@
 #include "rodnet/rodnet.h"
 #include "utils/screenshot.h"
 
-#define TEST
+// #define TEST
 // #define RELEAESE
 
 #define FISH_CLASS_NUM 10
@@ -51,7 +51,7 @@ class Fisher {
   // unit: second
   const double MaxThrowWaiting = 3;
   const double MaxBiteWaiting[FISH_CLASS_NUM] = {
-      6, 8.5, 9.5, 10.5, 7, 10.5, 10, 10, 10, 10};  // index is fish label
+      6, 8.5, 9.5, 10.5, 7, 10.5, 10, 10, 11.5, 11.5};  // index is fish label
   const double MaxControlWaiting = 3;
 
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;

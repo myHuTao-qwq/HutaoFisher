@@ -38,6 +38,8 @@ int main() {
     printf("Register hotkey Alt+X fail\n");
   }
 
+  system("if not exist log\\images mkdir log\\images");
+
 #ifdef TEST
   if (RegisterHotKey(NULL, 2, MOD_ALT,
                      0x41)) {  // 0x41: A, test

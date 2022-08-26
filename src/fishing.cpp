@@ -12,13 +12,16 @@ const BoxInfo refBBox = {NanoDet_InputSize[1] / 2 - 16,
 const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4};
 
 // BGR format
-const int baitColor[BAIT_CLASS_NUM][3] = {
-    {86, 132, 216}, {74, 79, 192}, {0, 174, 243}, {254, 67, 168}, {0, 0, 0}};
+const int baitColor[BAIT_CLASS_NUM][3] = {{86, 132, 216},
+                                          {74, 79, 192},
+                                          {0, 174, 243},
+                                          {254, 67, 168},
+                                          {172, 92, 123}};
 
 const std::vector<std::string> baits{"fruit paste", "redrot", "false worm",
                                      "fake fly", "sugardew"};
 
-const int controlColor = 248;  // grayscale
+const int controlColor = 250;  // grayscale
 
 const int progressRingPx[][2] = {
     {15, 3},  {19, 4},  {22, 6},  {24, 9},  {25, 12}, {25, 16}, {24, 19},
@@ -517,6 +520,7 @@ void Fisher::checkBite() {
     throw "checkBite: the float doesn't splash within acceptable time!";
   }
 
+  double biteTime;
   while (double(clock() - startTime) / CLOCKS_PER_SEC <
          MaxBiteWaiting[targetFish.label - 2]) {
     checkWorking();
@@ -527,6 +531,7 @@ void Fisher::checkBite() {
     cv::Canny(resized(cv::Rect(850, 508, 41, 41)), edge, 50, 150);
     if (cv::PSNR(edge, pullImg) > 10) {
       biteSuccess = true;
+      biteTime = double(clock() - startTime) / CLOCKS_PER_SEC;
       break;
     }
   }
@@ -561,7 +566,8 @@ void Fisher::checkBite() {
   // data collect----------------------------------------------------
 
   if (biteSuccess) {
-    printf("    checkBite: the fish gets hooked!\n");
+    printf("    checkBite: the fish gets hooked after %lf seconds!\n",
+           biteTime);
   } else {
     throw "checkBite: the fish didn't get hooked within an acceptable time!";
   }
@@ -660,9 +666,14 @@ void Fisher::control() {
         progress++;
       }
     }
-    start = (progress >= 18) || start;
+    start = (progress >= 15) || start;
     if (progress != lastProgress) {
       printf("    control: progress %d %%\n", progress * 5);
+
+      char filename[1024];
+      sprintf(filename, "%d_progress_%d.png", time(0), progress);
+      cv::imwrite(filename, progressRing);
+
       lastProgress = progress;
     }
     checkWorking();
