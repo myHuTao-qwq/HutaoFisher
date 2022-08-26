@@ -23,10 +23,26 @@ const std::vector<std::string> baits{"fruit paste", "redrot", "false worm",
 
 const int controlColor = 250;  // grayscale
 
-const int progressRingPx[][2] = {
-    {15, 3},  {19, 4},  {22, 6},  {24, 9},  {25, 12}, {25, 16}, {24, 19},
-    {22, 22}, {19, 24}, {15, 25}, {12, 25}, {8, 24},  {5, 22},  {3, 19},
-    {2, 16},  {2, 12},  {3, 9},   {5, 6},   {8, 4},   {12, 3}};
+const int progressRingPx[][2] = {{15, 3},
+                                 {19, 4},
+                                 {22, 6},
+                                 {24, 9},
+                                 {25, 12},
+                                 //  {25, 16},
+                                 //  {24, 19},
+                                 //  {22, 22},
+                                 {19, 24},
+                                 {15, 25},
+                                 {12, 25},
+                                 {8, 24},
+                                 {5, 22},
+                                 {3, 19},
+                                 {2, 16},
+                                 {2, 12},
+                                 {3, 9},
+                                 {5, 6},
+                                 {8, 4},
+                                 {12, 3}};
 
 inline void mouseEvent(DWORD dWflags, DWORD dx, DWORD dy) {
   Sleep(100);  // motherfucker why? but without sleeping mouse_event goes wrong
@@ -657,23 +673,21 @@ void Fisher::control() {
 
     // check progress
 
-    progressRing = resized(cv::Rect(498, yBase + 24, 28, 29));
-    progress = 0;
-    for (int i = 0; i < 20; i++) {  // 20 checkpoints on the ring
-      if (abs(controlColor - progressRing.at<uchar>(progressRingPx[i][1],
-                                                    progressRingPx[i][0])) <
-          20) {
-        progress++;
+    progressRing = resized(cv::Rect(498, yBase + 23, 28, 29));
+    // 20 checkpoints on the ring, but 2 is blocked by stablizer buff
+    for (progress = 0; progress < 17; progress++) {
+      if (abs(controlColor -
+              progressRing.at<uchar>(progressRingPx[progress][1],
+                                     progressRingPx[progress][0])) > 20) {
+        break;
       }
     }
-    start = (progress >= 15) || start;
+    if (progress > 5) {
+      progress += 3;
+    }
+    start = (progress >= 18) || start;
     if (progress != lastProgress) {
-      printf("    control: progress %d %%\n", progress * 5);
-
-      char filename[1024];
-      sprintf(filename, "%d_progress_%d.png", time(0), progress);
-      cv::imwrite(filename, progressRing);
-
+      printf("        control: progress %d %%\n", progress * 5);
       lastProgress = progress;
     }
     checkWorking();
