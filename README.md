@@ -2,12 +2,23 @@
 
 胡桃老婆过生日说她钓鱼不得法，还得自己跳下水抓，我听了心想怎么能亏待老婆呢？于是就写了这个全自动的HuTao Fisher，老婆想钓鱼直接站到水边拿起鱼竿打开钓鱼辅助工具，鱼就自己上钩啦！(x)
 
----
+
+
+## 功能更新 Functional Update
+
+#### 2022/8/26
+
+- 初步适配须弥鱼类:更新了神经网络的结构与参数并进行初步测试,基本在须弥能够正常工作.
+
+  Preliminarily adapt fish in Sumeru: the structure and parameters of the neural network have been updated and preliminary tests have been carried out. Basically, the fisher can work normally in Sumeru.
+
+
 
 ## 简介 Intro
 
 借鉴7eu7d7的工作[genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fish)的思路以及部分实现，在此基础上用C++重构了整体代码，并且进行了一些修改，做了一点微小的工作：(x)
 
+- 用C++重构，简化部署，点开即用
 - 重构抛竿判定：将其抽象为一三分类器（过近，过远，刚好）。并且在判定抛竿的部分通过一定的近似消除摄像机高度的影响。
 - 删除了强化学习力度控制（因为我不会）
 - 加入了对渊下宫鳐鱼的支持
@@ -18,6 +29,8 @@
 ---
 
 Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fish) of 7eu7d7. On this basis, I refactored the whole code with C++, and made some changes, and did a little work:
+
+- Refactoring with C++: you can run the fisher without any prerequesits.
 
 - Refactored the casting rod judgment: abstract it into a trinary classifier (too close, too far, ok). In addition, the effect of camera height is eliminated by a certain approximation.
 
@@ -34,7 +47,7 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 
 
 
-## 使用说明 User's Guide
+## 使用说明 Introduction for Use
 
 先运行HutaoFisher.exe再运行游戏。
 
