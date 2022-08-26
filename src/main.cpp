@@ -8,9 +8,16 @@
 #include "fishnet/nanodet.h"
 #include "utils/screenshot.h"
 
-const std::string imgPath = "resource/imgs";
+// #define TEST
+// #define RELEAESE
 
+#ifdef RELEAESE
+const std::string imgPath = "resource/imgs";
 const std::string modelPath = "resource/model";
+#else
+const std::string imgPath = "../../resource/imgs";
+const std::string modelPath = "../../resource/model";
+#endif
 
 bool useGPU = true;
 
@@ -31,6 +38,15 @@ int main() {
     printf("Register hotkey Alt+X fail\n");
   }
 
+#ifdef TEST
+  if (RegisterHotKey(NULL, 2, MOD_ALT,
+                     0x41)) {  // 0x41: A, test
+    printf("Register hotkey Alt+A success!\n");
+  } else {
+    printf("Register hotkey Alt+A fail\n");
+  }
+#endif
+
   printf("please choose whether to use GPU to infer: 1-Y 0:N          ");
   std::cin >> useGPU;
 
@@ -42,7 +58,11 @@ int main() {
 
   // fishing process
 
+#ifdef TEST
+  std::thread fishThread(&Fisher::getRodData, std::ref(fisher));
+#else
   std::thread fishThread(&Fisher::fishing, std::ref(fisher));
+#endif
   fishThread.detach();
 
   // check log
@@ -81,6 +101,17 @@ int main() {
         Beep(E4, 250);
         Beep(C4, 250);
         break;
+#ifdef TEST
+      case 2:
+        if (fisher.working) {
+          printf("Hotkey Alt+A has been pressed, run fisher test!\n");
+          fisher.testing = false;
+        } else {
+          printf(
+              "Hotkey Alt+A has been pressed, but fisher isn't "
+              "running!\n");
+        }
+#endif
     }
   }
 

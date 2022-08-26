@@ -6,12 +6,9 @@
 
 #include "nanodet.h"
 
-cv::Mat draw_bboxes(const cv::Mat& bgr, const std::vector<BoxInfo>& bboxes,
-                    object_rect effect_roi) {
-  static const char* class_names[] = {
-      "rod", "err_rod",       "medaka",     "large_medaka", "stickleback",
-      "koi", "butterflyfish", "pufferfish", "formalo_ray",  "divda_ray"};
-
+cv::Mat NanoDet::draw_bboxes(const cv::Mat& bgr,
+                             const std::vector<BoxInfo>& bboxes,
+                             object_rect effect_roi) {
   cv::Mat image = bgr.clone();
   int src_w = image.cols;
   int src_h = image.rows;
@@ -37,11 +34,11 @@ cv::Mat draw_bboxes(const cv::Mat& bgr, const std::vector<BoxInfo>& bboxes,
                   color);
 
     char text[256];
-    sprintf(text, "%s %.1f%%", class_names[bbox.label], bbox.score * 100);
+    sprintf(text, "%s %.1f%%", labels[bbox.label].c_str(), bbox.score * 100);
 
     int baseLine = 0;
     cv::Size label_size =
-        cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.4, 1, &baseLine);
+        cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
     int x = (bbox.x1 - effect_roi.x) * width_ratio;
     int y =
@@ -56,7 +53,7 @@ cv::Mat draw_bboxes(const cv::Mat& bgr, const std::vector<BoxInfo>& bboxes,
         color, -1);
 
     cv::putText(image, text, cv::Point(x, y + label_size.height),
-                cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255));
+                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
   }
 
   return image;

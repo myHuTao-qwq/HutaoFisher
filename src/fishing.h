@@ -11,6 +11,9 @@
 #include "rodnet/rodnet.h"
 #include "utils/screenshot.h"
 
+#define TEST
+// #define RELEAESE
+
 #define FISH_CLASS_NUM 10
 #define BAIT_CLASS_NUM 5
 
@@ -29,7 +32,11 @@ class Fisher {
  private:
   const int processShape[2] = {1024, 576};
   bool processWithInputShape;
+#ifdef RELEAESE
   const std::string logPath = "log";
+#else
+  const std::string logPath = "../../log";
+#endif
 
   const double steps[40][2] = {
       {0, 2},    {0, 2},    {0, 2},    {0, 2},    {0, -1},   {0, -1},
@@ -82,4 +89,9 @@ class Fisher {
   bool logData = false;
 
   void fishing();
+
+#ifdef TEST
+  bool testing = true;
+  void getRodData();
+#endif
 };

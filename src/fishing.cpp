@@ -7,11 +7,6 @@ const BoxInfo refBBox = {NanoDet_InputSize[1] / 2 - 16,
                          1,
                          0};  // represent the center of image
 
-const std::vector<std::string> labels{
-    "rod",         "err_rod",   "medaka",        "large_medaka",
-    "stickleback", "koi",       "butterflyfish", "pufferfish",
-    "formalo_ray", "divda_ray", "angler",        "axe_marlin"};
-
 // 0: fruit paste 1: redrot 2: false worm 3: fake fly 4: sugardew
 // index represents (fish_lable - 1)
 const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4};
@@ -229,7 +224,8 @@ void Fisher::selectFish() {
     }
   }
 
-  std::cout << "    select fish: " << labels[targetFish.label] << std::endl;
+  std::cout << "    select fish: " << fishNet->labels[targetFish.label]
+            << std::endl;
   return;
 }
 
@@ -704,9 +700,9 @@ void Fisher::imgLog(char name[], bool bbox) {
     effect_roi.y = 0;
     effect_roi.width = processShape[0];
     effect_roi.height = processShape[1];
-    cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
+    cv::Mat bboxed_img = fishNet->draw_bboxes(screenImage, bboxes, effect_roi);
     char bbox_filename[256];
-    cv::putText(bboxed_img, "target: " + labels[targetFish.label],
+    cv::putText(bboxed_img, "target: " + fishNet->labels[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
     sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),
@@ -777,3 +773,109 @@ void Fisher::fishing() {
 
   return;
 }
+
+#ifdef TEST
+void Fisher::getRodData() {
+  while (true) {
+    if (working) {
+      while (testing) {
+        Sleep(10);
+      }
+      testing = true;
+
+      Beep(C4, 250);
+      Beep(G4, 250);
+
+      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
+
+      while (testing) {
+        Sleep(10);
+      }
+      testing = true;
+
+      Beep(C4, 250);
+      Beep(G4, 250);
+
+      getBBoxes(false);
+
+      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
+
+      Sleep(3000);
+
+      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
+      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
+
+      object_rect effect_roi;
+      effect_roi.x = 0;
+      effect_roi.y = 0;
+      effect_roi.width = processShape[0];
+      effect_roi.height = processShape[1];
+      cv::Mat resized;
+      cv::resize(screenImage, resized, cv::Size(1600, 900));
+      cv::Mat bboxed_img = fishNet->draw_bboxes(resized, bboxes, effect_roi);
+
+      cv::imshow("bbox", bboxed_img);
+      cv::waitKey(0);
+      cv::destroyAllWindows();
+
+      std::vector<BoxInfo> rods, fishes;
+      for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
+           i++) {
+        if (i->label == 0) {
+          rods.push_back(*i);
+        } else if (i->label > 1) {
+          fishes.push_back(*i);
+        }
+      }
+
+      if (rods.empty()) {
+        printf("error: no rods!\n");
+        imgLog("getData", true);
+        return;
+      }
+
+      rod = *std::max_element(rods.begin(), rods.end(),
+                              [](BoxInfo bbox1, BoxInfo bbox2) {
+                                return bbox1.score < bbox2.score;
+                              });  // find the most confident rod;
+
+      targetFish = *std::min_element(
+          fishes.begin(), fishes.end(), [this](BoxInfo bbox1, BoxInfo bbox2) {
+            return bboxDist(rod, bbox1) < bboxDist(rod, bbox2);
+          });  // find the closest fish
+
+      std::cout << "nearest fish: " << fishNet->labels[targetFish.label]
+                << std::endl;
+
+      int success;
+      printf("Successed? 0: success 1: too close 2: too far              ");
+      std::cin >> success;
+
+      int save_results;
+      printf("save results? 0: save results 1:save picture else: skip    ");
+      std::cin >> save_results;
+      if (save_results == 1) {
+        imgLog("getData", true);
+        printf("done!\n");
+        continue;
+      } else if (save_results != 0) {
+        printf("done!\n");
+        continue;
+      }
+
+      std::ofstream data;
+      data.open("../../log/data.csv", std::ios::app);
+      char output[1024];
+      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d", time(0),
+              rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1, targetFish.x2,
+              targetFish.y1, targetFish.y2, targetFish.label - 2, success);
+      data << output << std::endl;
+      data.close();
+
+      printf("done!\n");
+    }
+  }
+
+  return;
+}
+#endif

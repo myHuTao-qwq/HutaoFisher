@@ -12,6 +12,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#define TOTAL_CLASS_NUM 12
+
 const float SCORE_THRESHOLD = 0.5;
 const float NMS_THRESHOLD = 0.4;
 
@@ -47,8 +49,8 @@ const int color_list[80][3] = {
     //{255 ,255 ,255}, //bg
     {216, 82, 24},   {236, 176, 31},  {125, 46, 141},  {118, 171, 47},
     {76, 189, 237},  {238, 19, 46},   {76, 76, 76},    {153, 153, 153},
-    {255, 0, 0},     {255, 127, 0},   {190, 190, 0},   {0, 255, 0},
-    {0, 0, 255},     {170, 0, 255},   {84, 84, 0},     {84, 170, 0},
+    {255, 0, 0},     {255, 127, 0},   {190, 190, 0},   {0, 0, 255},
+    {0, 255, 0},     {170, 0, 255},   {84, 84, 0},     {84, 170, 0},
     {84, 255, 0},    {170, 84, 0},    {170, 170, 0},   {170, 255, 0},
     {255, 84, 0},    {255, 170, 0},   {255, 255, 0},   {0, 84, 127},
     {0, 170, 127},   {0, 255, 127},   {84, 0, 127},    {84, 84, 127},
@@ -82,7 +84,7 @@ class NanoDet {
   // your own model
   int input_size[2] = {NanoDet_InputSize[0],
                        NanoDet_InputSize[1]};  // input height and width
-  int num_class = 10;                          // number of classes. 80 for COCO
+  int num_class = TOTAL_CLASS_NUM;             // number of classes. 80 for COCO
   int reg_max = 7;  // `reg_max` set in the training config. Default: 7.
   std::vector<int> strides = {8, 16, 32,
                               64};  // strides of the multi-level feature.
@@ -90,9 +92,13 @@ class NanoDet {
   std::vector<BoxInfo> detect(cv::Mat image, float score_threshold,
                               float nms_threshold);
 
-  std::vector<std::string> labels{
-      "rod", "err_rod",       "medaka",     "large_medaka", "stickleback",
-      "koi", "butterflyfish", "pufferfish", "formalo_ray",  "divda_ray"};
+  std::vector<std::string> labels{"rod",           "err_rod",     "medaka",
+                                  "large_medaka",  "stickleback", "koi",
+                                  "butterflyfish", "pufferfish",  "formalo_ray",
+                                  "divda_ray",     "angler",      "axe_marlin"};
+
+  cv::Mat draw_bboxes(const cv::Mat& bgr, const std::vector<BoxInfo>& bboxes,
+                      object_rect effect_roi);
 
  private:
   void preprocess(cv::Mat& image, ncnn::Mat& in);
@@ -103,9 +109,5 @@ class NanoDet {
                        int y, int stride);
   static void nms(std::vector<BoxInfo>& result, float nms_threshold);
 };
-
-
-cv::Mat draw_bboxes(const cv::Mat& bgr, const std::vector<BoxInfo>& bboxes,
-                    object_rect effect_roi);
 
 #endif  // NANODET_H
