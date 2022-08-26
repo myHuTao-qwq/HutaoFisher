@@ -4,12 +4,15 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
-#include <random>
 #include <iostream>
+#include <random>
 
 #include "fishnet/nanodet.h"
 #include "rodnet/rodnet.h"
 #include "utils/screenshot.h"
+
+#define FISH_CLASS_NUM 10
+#define BAIT_CLASS_NUM 5
 
 // music notes! qwq
 #define A3 220
@@ -40,8 +43,8 @@ class Fisher {
   const int MaxFishFailNum = 5;  // at most 5 times miss fish can be tolerated
   // unit: second
   const double MaxThrowWaiting = 3;
-  const double MaxBiteWaiting[8] = {6, 8.5,  9.5, 10.5,
-                                    7, 10.5, 10,  10};  // index is fish label
+  const double MaxBiteWaiting[FISH_CLASS_NUM] = {
+      6, 8.5, 9.5, 10.5, 7, 10.5, 10, 10, 10, 10};  // index is fish label
   const double MaxControlWaiting = 3;
 
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;

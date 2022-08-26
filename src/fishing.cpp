@@ -8,19 +8,20 @@ const BoxInfo refBBox = {NanoDet_InputSize[1] / 2 - 16,
                          0};  // represent the center of image
 
 const std::vector<std::string> labels{
-    "rod", "err_rod",       "medaka",     "large_medaka", "stickleback",
-    "koi", "butterflyfish", "pufferfish", "formalo_ray",  "divda_ray"};
+    "rod",         "err_rod",   "medaka",        "large_medaka",
+    "stickleback", "koi",       "butterflyfish", "pufferfish",
+    "formalo_ray", "divda_ray", "angler",        "axe_marlin"};
 
-// 0: fruit paste 1: redrot 2: false worm 3: fake fly
+// 0: fruit paste 1: redrot 2: false worm 3: fake fly 4: sugardew
 // index represents (fish_lable - 1)
-const int baitList[8] = {0, 0, 1, 3, 2, 3, 3, 3};
+const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4};
 
 // BGR format
-const int baitColor[4][3] = {
-    {86, 132, 216}, {74, 79, 192}, {0, 174, 243}, {254, 67, 168}};
+const int baitColor[BAIT_CLASS_NUM][3] = {
+    {86, 132, 216}, {74, 79, 192}, {0, 174, 243}, {254, 67, 168}, {0, 0, 0}};
 
 const std::vector<std::string> baits{"fruit paste", "redrot", "false worm",
-                                     "fake fly"};
+                                     "fake fly", "sugardew"};
 
 const int controlColor = 248;  // grayscale
 
@@ -65,8 +66,7 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
 
   hookImg = cv::imread(imgPath + "/hook.png", cv::IMREAD_GRAYSCALE);
   pullImg = cv::imread(imgPath + "/pull.png", cv::IMREAD_GRAYSCALE);
-  centralBarImg =
-      cv::imread(imgPath + "/centralBar.png", cv::IMREAD_GRAYSCALE);
+  centralBarImg = cv::imread(imgPath + "/centralBar.png", cv::IMREAD_GRAYSCALE);
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
@@ -554,9 +554,10 @@ void Fisher::checkBite() {
       std::ofstream data;
       data.open(logPath + "\\data.csv", std::ios::app);
       char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d", int(time(0)),
-              rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1, targetFish.x2,
-              targetFish.y1, targetFish.y2, targetFish.label - 2, biteState);
+      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
+              int(time(0)), rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1,
+              targetFish.x2, targetFish.y1, targetFish.y2, targetFish.label - 2,
+              biteState);
       data << output << std::endl;
       data.close();
     }
@@ -729,7 +730,7 @@ void Fisher::fishing() {
     fishingFailCnt = 0;
     try {
       while (!working) {
-        Sleep(100); // wait for fisher launch
+        Sleep(100);  // wait for fisher launch
       }
       while (working && (fishingFailCnt < 3) && scanFish()) {
         printf("Fisher: Begin to try to catch a fish!\n");

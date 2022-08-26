@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef FISH_CLASS_NUM
+#define FISH_CLASS_NUM 10
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <string>
