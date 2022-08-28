@@ -57,7 +57,7 @@ jobs:
         cd fisher/src
         mkdir build
         cd build
-        cmake -DRELEAESE=ON ..
+        cmake -DRELEASE=ON ..
         cmake --build . --config Release
     - name: make-archive
       run: |
