@@ -1,0 +1,12 @@
+#pragma once
+
+#define fisher_VERSION_MAJOR @fisher_VERSION_MAJOR@
+#define fisher_VERSION_MINOR @fisher_VERSION_MINOR@
+#define fisher_VERSION_PATCH @fisher_VERSION_PATCH@
+
+#cmakedefine RELEASE
+#cmakedefine TEST
+
+#define FISH_CLASS_NUM 10
+#define BAIT_CLASS_NUM 5
+#define TOTAL_CLASS_NUM 12

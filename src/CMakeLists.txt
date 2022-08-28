@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.4.1)
 set(CMAKE_CXX_STANDARD 17)
 
-project(fisher VERSION 0.1.0)
+project(fisher VERSION 3.0.1)
 
-set(OpenCV_DIR "../../opencv-mobile/x64")
-# set(OpenCV_DIR "../../opencv/build")
+option(RELEASE "change directories" OFF)
+
+if(NOT RELEASE)
+    option(TEST "collect rod data" OFF)
+endif()
+
+set(OpenCV_DIR "../../opencv/build")
 set(ncnn_INSTALL_DIR "../../ncnn/x64")
 set(ncnn_DIR "${ncnn_INSTALL_DIR}/lib/cmake/ncnn")
 set(ncnn_INCLUDE_DIR "${ncnn_INSTALL_DIR}/include")
@@ -27,14 +32,16 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+configure_file(config.h.in config.h)
+
 set(
     FISHER_SRCS
 
     main.cpp
     fishing.cpp
-    fishnet/nanodet.cpp
-    rodnet/rodnet.cpp
-    utils/screenshot.cpp
+    nanodet.cpp
+    rodnet.cpp
+    screenshot.cpp
 )
 
 add_executable(fisher ${FISHER_SRCS})

@@ -12,7 +12,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#define TOTAL_CLASS_NUM 12
+#include "config.h"
+
 
 const float SCORE_THRESHOLD = 0.5;
 const float NMS_THRESHOLD = 0.4;
@@ -91,14 +92,6 @@ class NanoDet {
 
   std::vector<BoxInfo> detect(cv::Mat image, float score_threshold,
                               float nms_threshold);
-
-  std::vector<std::string> labels{"rod",           "err_rod",     "medaka",
-                                  "large_medaka",  "stickleback", "koi",
-                                  "butterflyfish", "pufferfish",  "formalo_ray",
-                                  "divda_ray",     "angler",      "axe_marlin"};
-
-  cv::Mat draw_bboxes(const cv::Mat& bgr, const std::vector<BoxInfo>& bboxes,
-                      object_rect effect_roi);
 
  private:
   void preprocess(cv::Mat& image, ncnn::Mat& in);

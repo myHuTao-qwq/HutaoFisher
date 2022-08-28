@@ -6,63 +6,6 @@
 
 #include "nanodet.h"
 
-cv::Mat NanoDet::draw_bboxes(const cv::Mat& bgr,
-                             const std::vector<BoxInfo>& bboxes,
-                             object_rect effect_roi) {
-  cv::Mat image = bgr.clone();
-  int src_w = image.cols;
-  int src_h = image.rows;
-  int dst_w = effect_roi.width;
-  int dst_h = effect_roi.height;
-  float width_ratio = (float)src_w / (float)dst_w;
-  float height_ratio = (float)src_h / (float)dst_h;
-
-  for (size_t i = 0; i < bboxes.size(); i++) {
-    const BoxInfo& bbox = bboxes[i];
-    cv::Scalar color =
-        cv::Scalar(color_list[bbox.label][0], color_list[bbox.label][1],
-                   color_list[bbox.label][2]);
-    // fprintf(stderr, "%d = %.5f at %.2f %.2f %.2f %.2f\n", bbox.label,
-    // bbox.score,
-    //     bbox.x1, bbox.y1, bbox.x2, bbox.y2);
-
-    cv::rectangle(image,
-                  cv::Rect(cv::Point((bbox.x1 - effect_roi.x) * width_ratio,
-                                     (bbox.y1 - effect_roi.y) * height_ratio),
-                           cv::Point((bbox.x2 - effect_roi.x) * width_ratio,
-                                     (bbox.y2 - effect_roi.y) * height_ratio)),
-                  color);
-
-    char text[256];
-    sprintf(text, "%s %.1f%%", labels[bbox.label].c_str(), bbox.score * 100);
-
-    int baseLine = 0;
-    cv::Size label_size =
-        cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-
-    int x = (bbox.x1 - effect_roi.x) * width_ratio;
-    int y =
-        (bbox.y1 - effect_roi.y) * height_ratio - label_size.height - baseLine;
-    if (y < 0) y = 0;
-    if (x + label_size.width > image.cols) x = image.cols - label_size.width;
-
-    cv::rectangle(
-        image,
-        cv::Rect(cv::Point(x, y),
-                 cv::Size(label_size.width, label_size.height + baseLine)),
-        color, -1);
-
-    cv::putText(image, text, cv::Point(x, y + label_size.height),
-                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
-  }
-
-  return image;
-
-  // cv::Mat showImage(720, 1280, CV_8UC3);
-  // cv::resize(image, showImage, {1280, 720});
-  // cv::imshow("image", showImage);
-}
-
 inline float fast_exp(float x) {
   union {
     uint32_t i;

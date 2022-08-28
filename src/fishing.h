@@ -7,15 +7,10 @@
 #include <iostream>
 #include <random>
 
-#include "fishnet/nanodet.h"
-#include "rodnet/rodnet.h"
-#include "utils/screenshot.h"
-
-// #define TEST
-#define RELEASE
-
-#define FISH_CLASS_NUM 10
-#define BAIT_CLASS_NUM 5
+#include "config.h"
+#include "nanodet.h"
+#include "rodnet.h"
+#include "screenshot.h"
 
 // music notes! qwq
 #define A3 220
@@ -60,7 +55,7 @@ class Fisher {
   //   RodNet *rodNet;
   Screen *screen;
   double ratio;            // the ratio between user's screen and process layer
-  double fishnetRatio[2];  // the ratio between process and fishnet's input size
+  float fishnetRatio[2];  // the ratio between process and fishnet's input size
   cv::Mat screenImage;
   std::vector<BoxInfo> bboxes;
   BoxInfo targetFish;

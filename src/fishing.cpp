@@ -1,9 +1,9 @@
 #include "fishing.h"
 
-const BoxInfo refBBox = {NanoDet_InputSize[1] / 2 - 16,
-                         NanoDet_InputSize[0] / 2 - 9,
-                         NanoDet_InputSize[1] / 2 + 16,
-                         NanoDet_InputSize[0] / 2 + 9,
+const BoxInfo refBBox = {float(NanoDet_InputSize[1]) / 2 - 16,
+                         float(NanoDet_InputSize[0]) / 2 - 9,
+                         float(NanoDet_InputSize[1]) / 2 + 16,
+                         float(NanoDet_InputSize[0]) / 2 + 9,
                          1,
                          0};  // represent the center of image
 
@@ -17,6 +17,11 @@ const int baitColor[BAIT_CLASS_NUM][3] = {{86, 132, 216},
                                           {0, 174, 243},
                                           {254, 67, 168},
                                           {172, 92, 123}};
+
+const std::vector<std::string> labels{
+    "rod",         "err_rod",   "medaka",        "large_medaka",
+    "stickleback", "koi",       "butterflyfish", "pufferfish",
+    "formalo_ray", "divda_ray", "angler",        "axe_marlin"};
 
 const std::vector<std::string> baits{"fruit paste", "redrot", "false worm",
                                      "fake fly", "sugardew"};
@@ -44,9 +49,9 @@ const int progressRingPx[][2] = {{15, 3},
                                  {8, 4},
                                  {12, 3}};
 
-inline void mouseEvent(DWORD dWflags, DWORD dx, DWORD dy) {
+inline void mouseEvent(DWORD dWflags, double dx, double dy) {
   Sleep(100);  // motherfucker why? but without sleeping mouse_event goes wrong
-  mouse_event(dWflags, dx, dy, 0, 0);
+  mouse_event(dWflags, DWORD(dx), DWORD(dy), 0, 0);
   return;
 }
 
@@ -66,6 +71,55 @@ double colorDiff(const int refColor[], cv::Vec3b screenColor) {
               pow(refColor[2] - screenColor[2], 2));
 }
 
+cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
+                    object_rect effect_roi) {
+  cv::Mat image = bgr.clone();
+  int src_w = image.cols;
+  int src_h = image.rows;
+  int dst_w = effect_roi.width;
+  int dst_h = effect_roi.height;
+  float width_ratio = (float)src_w / (float)dst_w;
+  float height_ratio = (float)src_h / (float)dst_h;
+
+  for (size_t i = 0; i < bboxes.size(); i++) {
+    const BoxInfo &bbox = bboxes[i];
+    cv::Scalar color =
+        cv::Scalar(color_list[bbox.label][0], color_list[bbox.label][1],
+                   color_list[bbox.label][2]);
+
+    cv::rectangle(image,
+                  cv::Rect(cv::Point((bbox.x1 - effect_roi.x) * width_ratio,
+                                     (bbox.y1 - effect_roi.y) * height_ratio),
+                           cv::Point((bbox.x2 - effect_roi.x) * width_ratio,
+                                     (bbox.y2 - effect_roi.y) * height_ratio)),
+                  color);
+
+    char text[256];
+    sprintf(text, "%s %.1f%%", labels[bbox.label].c_str(), bbox.score * 100);
+
+    int baseLine = 0;
+    cv::Size label_size =
+        cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+
+    int x = (bbox.x1 - effect_roi.x) * width_ratio;
+    int y =
+        (bbox.y1 - effect_roi.y) * height_ratio - label_size.height - baseLine;
+    if (y < 0) y = 0;
+    if (x + label_size.width > image.cols) x = image.cols - label_size.width;
+
+    cv::rectangle(
+        image,
+        cv::Rect(cv::Point(x, y),
+                 cv::Size(label_size.width, label_size.height + baseLine)),
+        color, -1);
+
+    cv::putText(image, text, cv::Point(x, y + label_size.height),
+                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255));
+  }
+
+  return image;
+}
+
 Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
   this->working = false;
   this->fishNet = fishnet;
@@ -75,8 +129,8 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
 
   processWithInputShape = (processShape[0] == fishNet->input_size[1] &&
                            processShape[1] == fishNet->input_size[0]);
-  fishnetRatio[0] = double(fishNet->input_size[1]) / processShape[0];
-  fishnetRatio[1] = double(fishNet->input_size[0]) / processShape[1];
+  fishnetRatio[0] = float(fishNet->input_size[1]) / processShape[0];
+  fishnetRatio[1] = float(fishNet->input_size[0]) / processShape[1];
 
   hookImg = cv::imread(imgPath + "/hook.png", cv::IMREAD_GRAYSCALE);
   pullImg = cv::imread(imgPath + "/pull.png", cv::IMREAD_GRAYSCALE);
@@ -243,8 +297,7 @@ void Fisher::selectFish() {
     }
   }
 
-  std::cout << "    select fish: " << fishNet->labels[targetFish.label]
-            << std::endl;
+  std::cout << "    select fish: " << labels[targetFish.label] << std::endl;
   return;
 }
 
@@ -353,7 +406,7 @@ void Fisher::throwRod() {
 
   // try to move the rod to a proper position
   int fishFailNum = 0;
-  int dx = 0, dy = 0;
+  float dx = 0, dy = 0;
 
   std::vector<BoxInfo> targetFishes, rods;
 
@@ -725,9 +778,9 @@ void Fisher::imgLog(char name[], bool bbox) {
     effect_roi.y = 0;
     effect_roi.width = processShape[0];
     effect_roi.height = processShape[1];
-    cv::Mat bboxed_img = fishNet->draw_bboxes(screenImage, bboxes, effect_roi);
+    cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
     char bbox_filename[256];
-    cv::putText(bboxed_img, "target: " + fishNet->labels[targetFish.label],
+    cv::putText(bboxed_img, "target: " + labels[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
     sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),
@@ -837,7 +890,7 @@ void Fisher::getRodData() {
       effect_roi.height = processShape[1];
       cv::Mat resized;
       cv::resize(screenImage, resized, cv::Size(1600, 900));
-      cv::Mat bboxed_img = fishNet->draw_bboxes(resized, bboxes, effect_roi);
+      cv::Mat bboxed_img = draw_bboxes(resized, bboxes, effect_roi);
 
       cv::imshow("bbox", bboxed_img);
       cv::waitKey(0);
@@ -869,8 +922,7 @@ void Fisher::getRodData() {
             return bboxDist(rod, bbox1) < bboxDist(rod, bbox2);
           });  // find the closest fish
 
-      std::cout << "nearest fish: " << fishNet->labels[targetFish.label]
-                << std::endl;
+      std::cout << "nearest fish: " << labels[targetFish.label] << std::endl;
 
       int success;
       printf("Successed? 0: success 1: too close 2: too far              ");
@@ -889,11 +941,12 @@ void Fisher::getRodData() {
       }
 
       std::ofstream data;
-      data.open("../../log/data.csv", std::ios::app);
+      data.open(logPath + "/data.csv", std::ios::app);
       char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d", time(0),
-              rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1, targetFish.x2,
-              targetFish.y1, targetFish.y2, targetFish.label - 2, success);
+      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
+              int(time(0)), rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1,
+              targetFish.x2, targetFish.y1, targetFish.y2, targetFish.label - 2,
+              success);
       data << output << std::endl;
       data.close();
 

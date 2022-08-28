@@ -4,12 +4,10 @@
 #include <iostream>
 #include <thread>
 
+#include "config.h"
 #include "fishing.h"
-#include "fishnet/nanodet.h"
-#include "utils/screenshot.h"
-
-// #define TEST
-#define RELEASE
+#include "nanodet.h"
+#include "screenshot.h"
 
 #ifdef RELEASE
 const std::string imgPath = "resource/imgs";
@@ -22,6 +20,8 @@ const std::string modelPath = "../../resource/model";
 bool useGPU = true;
 
 int main() {
+  printf("Version: %d.%d.%d\n", fisher_VERSION_MAJOR, fisher_VERSION_MINOR,
+         fisher_VERSION_PATCH);
   printf("Hutao Fisher guide: Alt+V launch fisher; Alt+X stop fisher\n");
 
   // init
@@ -76,8 +76,9 @@ int main() {
       "instance: 1-Y 0-N          ");
   std::cin >> logAllImgs;
   printf(
-      "please enter whether to log all useful images for this fisher "
-      "instance: 1-Y 0-N          ");
+      "please enter whether to log rod data for this fisher instance (if true, "
+      "you need to enter fail reason when throwing rod fails): 1-Y 0-N         "
+      " ");
   std::cin >> logData;
 
   fisher.logAllImgs = logAllImgs;

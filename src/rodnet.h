@@ -1,10 +1,10 @@
 #pragma once
 
-#define FISH_CLASS_NUM 10
-
 #include <algorithm>
 #include <cmath>
 #include <string>
+
+#include "config.h"
 
 struct rodInput {
   double rod_x1;
