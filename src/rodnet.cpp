@@ -3,30 +3,29 @@
 const double alpha =
     1734.34 / 2.5;  // tangent per pixel of nanodet input screen
 
-// todo: replace this manual calculation by ncnn inference again
-
-const double dz[FISH_CLASS_NUM] = {0.723374273586, 0.598907655899,
-                                   0.571440055027, 1.072931328279,
-                                   0.874450231440, 0.730942729535,
-                                   0.511942357141, 0.592882249767,
-                                   0.092617203160, 0.460822363130},
+const double dz[FISH_CLASS_NUM] = {0.694767486335, 0.705337270051,
+                                   0.686332216768, 1.220813102738,
+                                   1.094953763608, 1.075469787444,
+                                   0.816349156903, 0.805647715939,
+                                   0.580136160296, 0.717789275813},
              theta[3][1 + FISH_CLASS_NUM] =
-                 {{-0.128445514579, 0.335656427195, -0.194909236635,
-                   0.256766302821, -0.461941138131, -0.103019846729,
-                   0.384717410718, -0.038869030655, -0.105244280621,
-                   0.152566321074, -0.202559283737},
-                  {-0.382322555312, -0.336046181901, 0.139710679882,
-                   -0.119775909088, 0.347349655531, 0.046926698251,
-                   0.366338374269, 0.433172346889, 0.349098288008,
-                   0.113016327798, 0.374731565552},
-                  {0.326061754493, 0.102292656832, 0.271713576289,
-                   -0.268778766726, -0.116584461609, 0.018870539554,
-                   -0.261942007110, -0.567840823887, -0.221322900319,
-                   -0.446867925881, -0.317695308401}},
-             B[3] = {1.066449745329, 0.992303748934,
-                     -1.872309807778};  // fitted parameters
+                 {{-0.063321387830, 0.271287522041, -0.289622288023,
+                   0.369747102726, -0.382151700443, -0.209881378546,
+                   0.216269445203, 0.047319592279, -0.336408813103,
+                   0.472667978506, 0.063048934754},
+                  {-0.409084259711, -0.435680067346, -0.021881190130,
+                   -0.029230749790, 0.452849262476, -0.152770124847,
+                   0.483840163995, 0.375548149249, 0.430277401509,
+                   -0.083056601200, 0.402188636327},
+                  {0.432541882301, 0.189117922865, 0.348296203478,
+                   -0.046222606584, 0.068145706124, 0.057344159790,
+                   -0.504384913277, -0.510813307110, -0.440694262582,
+                   -0.300708292908, -0.200549034557}},
+             B[3] = {0.864525353743, 1.243253422151,
+                     -2.503097924792};  // fitted parameters
 
-const double offset[FISH_CLASS_NUM] = {0.3, 0, 0.2, 0, 0.1, 0.1, 0.1, 0, 0, 0};
+const double offset[FISH_CLASS_NUM] = {0.25, 0.05, 0.25, 0,   0.15,
+                                       0.2,  0.2,  0.1,  0.3, 0.15};
 
 // dst = {a,b,v}
 void f(double* dst, double* x, double* y) {
@@ -112,13 +111,18 @@ int _getRodState(rodInput input) {
 
   a = (input.rod_x2 - input.rod_x1) / 2 / alpha;
   b = (input.rod_y2 - input.rod_y1) / 2 / alpha;
+
+  if (a < b) {
+    std::swap(a, b);  // when vision is almost vertical this can cause error
+  }
+
   v0 = (288 - (input.rod_y1 + input.rod_y2) / 2) / alpha;
 
   u = (input.fish_x1 + input.fish_x2 - input.rod_x1 - input.rod_x2) / 2 / alpha;
   v = (288 - (input.fish_y1 + input.fish_y2) / 2) / alpha;
 
   double y0z0t[3], abv0[3] = {a, b, v0},
-                   init[3] = {40, 20, 1};  // empirical value
+                   init[3] = {30, 15, 1};  // empirical value
 
   double solveSuccess =
       NewtonRaphson(f, dfInv, y0z0t, abv0, init, 3, 1000, 1e-6);
@@ -140,8 +144,8 @@ int _getRodState(rodInput input) {
 
   double pred[3];
   softmax(pred, logits, 3);
-  pred[0] -= offset[input.fish_label];
-  // pred[0] -= 0.05;  // to make the prediction more precise when deployed
+  pred[0] -= offset[input.fish_label];  // to make the prediction more precise
+                                        // when deployed
 
   return int(std::max_element(pred, pred + 3) - pred);
 }
