@@ -73,7 +73,14 @@ double colorDiff(const int refColor[], cv::Vec3b screenColor) {
 
 cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
                     object_rect effect_roi) {
-  cv::Mat image = bgr.clone();
+    cv::Mat image;
+
+#ifdef RELEASE  // opencv-mobile reverse RGB and BGR here, but I don't know why
+  cv::cvtColor(bgr, image, cv::COLOR_BGR2RGB);
+#else
+  image = bgr.clone();
+#endif
+
   int src_w = image.cols;
   int src_h = image.rows;
   int dst_w = effect_roi.width;

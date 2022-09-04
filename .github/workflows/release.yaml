@@ -13,17 +13,18 @@ jobs:
     - uses: actions/checkout@v3
       with:
         path: fisher
-    - name: cache-opencv
-      id: cache-opencv
+    - name: cache-opencv-mobile
+      id: cache-opencv-mobile
       uses: actions/cache@v3
       with:
-        path: opencv
-        key: opencv-4.6.0
-    - name: opencv
-      if: steps.cache-opencv.outputs.cache-hit != 'true'
+        path: opencv-mobile
+        key: opencv-mobile-vs2019-v14
+    - name: opencv-mobile
+      if: steps.cache-opencv-mobile.outputs.cache-hit != 'true'
       run: |
-        Invoke-WebRequest -Uri https://github.com/opencv/opencv/releases/download/4.6.0/opencv-4.6.0-vc14_vc15.exe -OutFile opencv-4.6.0-vc14_vc15.exe
-        7z x ./opencv-4.6.0-vc14_vc15.exe
+        Invoke-WebRequest -Uri https://github.com/nihui/opencv-mobile/releases/download/v14/opencv-mobile-4.5.4-windows-vs2019.zip -OutFile opencv-mobile-4.5.4-windows-vs2019.zip
+        7z x ./opencv-mobile-4.5.4-windows-vs2019.zip
+        mv opencv-mobile-4.5.4-windows-vs2019 opencv-mobile
     - name: cache-ncnn
       id: cache-ncnn
       uses: actions/cache@v3

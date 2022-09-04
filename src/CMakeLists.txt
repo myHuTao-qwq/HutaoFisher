@@ -1,15 +1,18 @@
 cmake_minimum_required(VERSION 3.4.1)
 set(CMAKE_CXX_STANDARD 17)
 
-project(fisher VERSION 3.0.1)
+project(fisher VERSION 3.0.2)
 
 option(RELEASE "change directories" OFF)
 
 if(NOT RELEASE)
+    set(OpenCV_DIR "../../opencv/build") # collecting data needs cv::imshow
     option(TEST "collect rod data" OFF)
+else()
+    set(OpenCV_DIR "../../opencv-mobile/x64")
 endif()
 
-set(OpenCV_DIR "../../opencv/build")
+
 set(ncnn_INSTALL_DIR "../../ncnn/x64")
 set(ncnn_DIR "${ncnn_INSTALL_DIR}/lib/cmake/ncnn")
 set(ncnn_INCLUDE_DIR "${ncnn_INSTALL_DIR}/include")
