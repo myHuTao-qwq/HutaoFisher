@@ -17,7 +17,7 @@ set(ncnn_INSTALL_DIR "../../ncnn/x64")
 set(ncnn_DIR "${ncnn_INSTALL_DIR}/lib/cmake/ncnn")
 set(ncnn_INCLUDE_DIR "${ncnn_INSTALL_DIR}/include")
 
-set(OpenCV_STATIC ON)
+set(OpenCV_STATIC ON) # warning: this option doesn't work with a pre-build opencv (not mobile)
 
 find_package(OpenCV REQUIRED)
 

@@ -9,7 +9,7 @@
 #### 2022/9/4
 
 - 修复了opencv-mobile写含bbox的图片时背景颜色错误的bug
-- 调整网络参数
+- 调整抛竿参数
 
 
 
@@ -64,7 +64,7 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 
 在启动钓鱼器之前应手动走到钓鱼点，选择鱼竿并在游戏中进入钓鱼。
 
-按Alt+A进入钓鱼，Alt+X退出钓鱼。
+按Alt+V进入钓鱼，Alt+X退出钓鱼。
 
 提示音依照音阶顺序依次为：
 
@@ -92,7 +92,7 @@ Run the game in full screen mode with a 16:9 aspect ratio (important!).
 
 Before starting the fisher, you should manually walk to the fishing place, select a fishing rod and enter fishing in the game.
 
-Press Alt+A to enter fishing and Alt+X to exit fishing.
+Press Alt+V to start fishing and Alt+X to exit fishing.
 
 The beeps are in order of scale:
 

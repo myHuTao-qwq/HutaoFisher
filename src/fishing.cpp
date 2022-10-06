@@ -18,13 +18,13 @@ const int baitColor[BAIT_CLASS_NUM][3] = {{86, 132, 216},
                                           {254, 67, 168},
                                           {172, 92, 123}};
 
-const std::vector<std::string> labels{
+const std::vector<std::string> fishNames{
     "rod",         "err_rod",   "medaka",        "large_medaka",
     "stickleback", "koi",       "butterflyfish", "pufferfish",
     "formalo_ray", "divda_ray", "angler",        "axe_marlin"};
 
-const std::vector<std::string> baits{"fruit paste", "redrot", "false worm",
-                                     "fake fly", "sugardew"};
+const std::vector<std::string> baitNames{"fruit paste", "redrot", "false worm",
+                                         "fake fly", "sugardew"};
 
 const int controlColor = 250;  // grayscale
 
@@ -73,7 +73,7 @@ double colorDiff(const int refColor[], cv::Vec3b screenColor) {
 
 cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
                     object_rect effect_roi) {
-    cv::Mat image;
+  cv::Mat image;
 
 #ifdef RELEASE  // opencv-mobile reverse RGB and BGR here, but I don't know why
   cv::cvtColor(bgr, image, cv::COLOR_BGR2RGB);
@@ -102,7 +102,7 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
                   color);
 
     char text[256];
-    sprintf(text, "%s %.1f%%", labels[bbox.label].c_str(), bbox.score * 100);
+    sprintf(text, "%s %.1f%%", fishNames[bbox.label].c_str(), bbox.score * 100);
 
     int baseLine = 0;
     cv::Size label_size =
@@ -145,6 +145,8 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
+
+  bait = -1;
 
   return;
 }
@@ -304,7 +306,7 @@ void Fisher::selectFish() {
     }
   }
 
-  std::cout << "    select fish: " << labels[targetFish.label] << std::endl;
+  std::cout << "    select fish: " << fishNames[targetFish.label] << std::endl;
   return;
 }
 
@@ -313,8 +315,15 @@ void Fisher::chooseBait() {
   Beep(F4, 250);
   checkWorking();
 
+  if (baitList[targetFish.label - 2] == bait) {
+    return;
+  } else {
+    // all the errors will reset bait to -1, so there should be no bug here?
+    bait = baitList[targetFish.label - 2];
+  }
+
   int color[3];
-  memcpy(color, baitColor[baitList[targetFish.label - 2]], 3 * sizeof(int));
+  memcpy(color, baitColor[bait], 3 * sizeof(int));
 
   mouseEvent(MOUSEEVENTF_RIGHTDOWN, 0, 0);
   mouseEvent(MOUSEEVENTF_RIGHTUP, 0, 0);
@@ -392,8 +401,7 @@ void Fisher::chooseBait() {
     }
   }
 
-  std::cout << "    choose bait: select "
-            << baits[baitList[targetFish.label - 2]] << " success!"
+  std::cout << "    choose bait: select " << baitNames[bait] << " success!"
             << std::endl;
   return;
 }
@@ -681,7 +689,7 @@ void Fisher::control() {
 
   int cursorPos, leftEdgePos, rightEdgePos;
   int progress = 0, lastProgress = 0;
-  bool start = false;
+  bool start = false, end = false;
   double cursorScore, leftScore, rightScore;
 
   cv::Mat controlBox, controlBar, progressRing;
@@ -704,13 +712,19 @@ void Fisher::control() {
     // check exit condition
     if (cursorScore < 0.55) {
       if (start) {
-        printf("    control: succeed!\n");
+        if (end) {
+          printf("    control: succeed!\n");
+        } else {
+          throw "control error: control fail!";
+        }
+        mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
+        break;
       } else {
-        throw "control error: control fail!";
+        continue;
       }
-      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
-      break;
     }
+
+    start = true;
 
     // find left edge
     cv::matchTemplate(controlBar, leftEdgeImg, score, cv::TM_CCOEFF_NORMED);
@@ -745,7 +759,7 @@ void Fisher::control() {
     if (progress > 5) {
       progress += 3;
     }
-    start = (progress >= 18) || start;
+    end = (progress >= 18) || end;
     if (progress != lastProgress) {
       printf("        control: progress %d %%\n", progress * 5);
       lastProgress = progress;
@@ -787,7 +801,7 @@ void Fisher::imgLog(char name[], bool bbox) {
     effect_roi.height = processShape[1];
     cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
     char bbox_filename[256];
-    cv::putText(bboxed_img, "target: " + labels[targetFish.label],
+    cv::putText(bboxed_img, "target: " + fishNames[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
     sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),
@@ -828,6 +842,7 @@ void Fisher::fishing() {
           Sleep(1500);
         } catch (const char *msg) {
           fishingFailCnt++;
+          bait = -1;
           std::cerr << "    Error occured while fishing: " << msg << '\n';
           errLog();
         }
@@ -842,6 +857,7 @@ void Fisher::fishing() {
           Beep(A3, 250);
         } else {
           printf("Fisher: All the fishes in this pool have been caught!\n");
+          bait = -1;
           Beep(C5, 250);
           Beep(G4, 250);
           Beep(E4, 250);
@@ -850,6 +866,7 @@ void Fisher::fishing() {
         working = false;
       }
     } catch (const bool msg) {
+      bait = -1;
       std::cerr << "    Error occured while fishing: fishing process was "
                    "manually aborted!\n";
       continue;

@@ -46,7 +46,8 @@ class Fisher {
   // unit: second
   const double MaxThrowWaiting = 3;
   const double MaxBiteWaiting[FISH_CLASS_NUM] = {
-      8, 8.5, 9.5, 10.5, 8.5, 11.5, 11.5, 10.5, 9.5, 8.5};  // index is fish label
+      8,    8.5,  9.5,  10.5, 8.5,
+      11.5, 11.5, 10.5, 9.5,  8.5};  // index is fish label
   const double MaxControlWaiting = 3;
 
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;
@@ -54,8 +55,11 @@ class Fisher {
   NanoDet *fishNet;
   //   RodNet *rodNet;
   Screen *screen;
-  double ratio;            // the ratio between user's screen and process layer
+  double ratio;           // the ratio between user's screen and process layer
   float fishnetRatio[2];  // the ratio between process and fishnet's input size
+
+  int bait;  //-1: undetermined bait
+
   cv::Mat screenImage;
   std::vector<BoxInfo> bboxes;
   BoxInfo targetFish;
