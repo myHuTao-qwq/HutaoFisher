@@ -78,7 +78,7 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 
 这也是单次钓鱼时程序的运行顺序。
 
-钓鱼器出现严重错误时会发出低音蜂鸣并尝试从头开始钓鱼，若钓鱼过程中程序运行连续出现3次严重错误则钓鱼器会自动终止，需要重新按Alt+A以开始钓鱼。
+钓鱼器出现严重错误时会发出低音蜂鸣并尝试从头开始钓鱼，若钓鱼过程中程序运行连续出现3次严重错误则钓鱼器会自动终止，需要重新按Alt+V以开始钓鱼。
 
 可能有用的图像与记录存放在log文件夹中。
 
@@ -112,7 +112,7 @@ The beeps are in order of scale:
 
 This is also the order which the program runs on a single fishing process.
 
-When a serious error occurs, the fisher will beep lowly and try to start fishing anew. If there are three successive serious errors occured during the fishing process, the fisher will automatically stop, and you need to press Alt+A again to restart fishing.
+When a serious error occurs, the fisher will beep lowly and try to start fishing anew. If there are three successive serious errors occured during the fishing process, the fisher will automatically stop, and you need to press Alt+V again to restart fishing.
 
 Probably useful images and data are stored in the log folder.
 
