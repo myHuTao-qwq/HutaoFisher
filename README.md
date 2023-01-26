@@ -6,6 +6,13 @@
 
 ## 功能更新 Functional Update
 
+#### 2022/10/6
+
+- 优化了钓鱼流程: 如果fisher确定当前的需要的鱼饵与上一条鱼的相同, 则跳过选饵的步骤.
+- 优化了控制流程control()
+
+
+
 #### 2022/9/4
 
 - 修复了opencv-mobile写含bbox的图片时背景颜色错误的bug
@@ -56,6 +63,8 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 
 ## 使用说明 Introduction for Use
 
+不需要clone源代码，直接在release中下载最新版本即可。
+
 先运行HutaoFisher.exe再运行游戏。
 
 可在运行后的命令行界面依次设置是否使用GPU推理，是否记录全部图像（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）
@@ -83,6 +92,8 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 可能有用的图像与记录存放在log文件夹中。
 
 ---
+
+You don't need to clone the source code, just download the latest release.
 
 Run HutaoFisher.exe before launch the game.
 
