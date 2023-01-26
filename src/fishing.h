@@ -54,6 +54,8 @@ class Fisher {
   const double MaxControlWaiting = 3;
 
   bool typeToFish[FISH_CLASS_NUM];
+  bool logAllImgs;
+  bool logData;
 
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;
 
@@ -89,8 +91,6 @@ class Fisher {
   ~Fisher();
 
   bool working;
-  bool logAllImgs = false;
-  bool logData = false;
 
   void fishing();
 

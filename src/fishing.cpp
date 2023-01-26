@@ -150,6 +150,8 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   for (int i = 0; i < FISH_CLASS_NUM; i++) {
     typeToFish[i] = config["typeToFish"][typeNames[i + NON_FISH_CLASS_NUM]];
   }
+  this->logAllImgs = config["logAllImgs"];
+  this->logData = config["logData"];
 
   bait = -1;
 
@@ -878,7 +880,7 @@ void Fisher::fishing() {
         }
         working = false;
       }
-    } catch (const bool msg) {
+    } catch (const bool) {
       bait = -1;
       std::cerr << "    Error occured while fishing: fishing process was "
                    "manually aborted!\n";

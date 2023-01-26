@@ -1,11 +1,15 @@
 {
+    "useGPU": true,
+    "logAllImgs": true,
+    "logData": true,
+
     "typeToFish": {
         "medaka": true,
-        "large_medaka": false,
-        "stickleback": false,
-        "koi": false,
-        "butterflyfish": false,
-        "pufferfish": false,
+        "large_medaka": true,
+        "stickleback": true,
+        "koi": true,
+        "butterflyfish": true,
+        "pufferfish": true,
         "formalo_ray": true,
         "divda_ray": true,
         "angler": true,

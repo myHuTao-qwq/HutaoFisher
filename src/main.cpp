@@ -1,9 +1,9 @@
 #include <Windows.h>
 
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <thread>
-#include <fstream>
 
 #include "json.hpp"
 using json = nlohmann::json;
@@ -23,25 +23,27 @@ const std::string modelPath = "../../resource/model";
 const std::string configPath = "../../config.json";
 #endif
 
-bool useGPU = true;
-
 int main() {
   printf("Version: %d.%d.%d\n", fisher_VERSION_MAJOR, fisher_VERSION_MINOR,
          fisher_VERSION_PATCH);
   printf("Hutao Fisher guide: Alt+V launch fisher; Alt+X stop fisher\n");
 
   // init
+  bool hotkey = true;
+
   if (RegisterHotKey(NULL, 0, MOD_ALT,
                      0x56)) {  // 0x56: V do fishing
     printf("Register hotkey Alt+V success!\n");
   } else {
     printf("Register hotkey Alt+V fail\n");
+    hotkey = false;
   }
   if (RegisterHotKey(NULL, 1, MOD_ALT,
                      0x58)) {  // 0x58: X, exit fishing
     printf("Register hotkey Alt+X success!\n");
   } else {
     printf("Register hotkey Alt+X fail\n");
+    hotkey = false;
   }
 
 #ifdef RELEASE
@@ -54,15 +56,88 @@ int main() {
     printf("Register hotkey Alt+A success!\n");
   } else {
     printf("Register hotkey Alt+A fail\n");
+    hotkey = false;
   }
 #endif
 
-  std::ifstream f(configPath);
-  json config = json::parse(f);
-  f.close();
+  if (!hotkey) {
+    std::cerr << "Error: register hotkey failed! Please check hotkey settings "
+                 "of other applications.\n";
+    system("pause");
+    return 0;
+  }
 
-  printf("please choose whether to use GPU to infer: 1-Y 0:N          ");
-  std::cin >> useGPU;
+  json config;
+  bool useGPU, logAllImgs, logData;
+
+  try {
+    std::ifstream f(configPath);
+    if (f.fail()) {
+      std::cerr << "Error: load config.json failed!\n";
+      system("pause");
+      return 0;
+    }
+    config = json::parse(f);
+    f.close();
+
+    const std::vector<std::string> fishNames{
+        "medaka",     "large_medaka", "stickleback", "koi",    "butterflyfish",
+        "pufferfish", "formalo_ray",  "divda_ray",   "angler", "axe_marlin"};
+
+    std::cout << "Configurations:\n";
+    std::cout << std::setw(32) << std::left
+              << "  Use GPU to infer: " << config["useGPU"] << '\n';
+    useGPU = config["useGPU"];
+
+    std::cout << std::setw(32) << std::left
+              << "  Log all useful images: " << config["logAllImgs"] << '\n';
+    logAllImgs = config["logAllImgs"];
+
+    std::cout << std::setw(32) << std::left
+              << "  Log rod data: " << config["logData"] << '\n';
+    logData = config["logData"];
+
+    std::vector<std::string> fishYes, fishNo;
+    for (int i = 0; i < FISH_CLASS_NUM; i++) {
+      if (config["typeToFish"][fishNames[i]]) {
+        fishYes.push_back(fishNames[i]);
+      } else {
+        fishNo.push_back(fishNames[i]);
+      }
+    }
+
+    if (fishYes.empty()) {
+      std::cerr << "Error: no fish is configured to be caught!";
+      system("pause");
+      return 0;
+    } else {
+      std::cout << "  Types of fish to be caught:\n";
+      for (std::vector<std::string>::iterator i = fishYes.begin();
+           i < fishYes.end(); i++) {
+        std::cout << "    " + *i + "\n";
+      }
+    }
+    if (!fishNo.empty()) {
+      std::cout << "  Types of fish not to be caught:\n";
+      for (std::vector<std::string>::iterator i = fishNo.begin();
+           i < fishNo.end(); i++) {
+        std::cout << "    " + *i + "\n";
+      }
+    }
+
+  } catch (const nlohmann::json_abi_v3_11_2::detail::parse_error& e) {
+    std::cerr << e.what() << '\n';
+    std::cerr
+        << "Error: the structure config.json cannot be parsed, please check!\n";
+    system("pause");
+    return 0;
+  } catch (const nlohmann::json_abi_v3_11_2::detail::type_error& e) {
+    std::cerr << e.what() << '\n';
+    std::cerr
+        << "Error: wrong key or value exists in config.json, please check!\n";
+    system("pause");
+    return 0;
+  }
 
   NanoDet fishnet((modelPath + "/nanodet-fish_mod.param").c_str(),
                   (modelPath + "/nanodet-fish_mod.bin").c_str(), useGPU);
@@ -78,21 +153,6 @@ int main() {
   std::thread fishThread(&Fisher::fishing, std::ref(fisher));
 #endif
   fishThread.detach();
-
-  // check log
-  bool logAllImgs, logData;
-  printf(
-      "please enter whether to enable log all useful images for this fisher "
-      "instance: 1-Y 0-N          ");
-  std::cin >> logAllImgs;
-  printf(
-      "please enter whether to log rod data for this fisher instance (if true, "
-      "you need to enter fail reason when throwing rod fails): 1-Y 0-N         "
-      " ");
-  std::cin >> logData;
-
-  fisher.logAllImgs = logAllImgs;
-  fisher.logData = logData;
 
   printf("Hutao Fisher configuration done! Now you can start fishing.\n");
 

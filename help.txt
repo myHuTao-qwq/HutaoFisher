@@ -1,0 +1,99 @@
+# HuTao Fisher
+
+https://github.com/myHuTao-qwq/HutaoFisher
+
+胡桃老婆过生日说她钓鱼不得法，还得自己跳下水抓，我听了心想怎么能亏待老婆呢？于是就写了这个全自动的HuTao Fisher，老婆想钓鱼直接站到水边拿起鱼竿打开钓鱼辅助工具，鱼就自己上钩啦！(x)
+
+----------------------------------------------------------------------------------
+
+使用说明:
+先运行HutaoFisher.exe再运行游戏。
+可在config.json中设置是否使用GPU推理(useGPU)，是否记录全部图像(logAllImgs)（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定(logData)（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）, 以及是否钓某一大类的鱼(typeToFish)
+在全屏模式下运行游戏，并且显示器长宽比应为16:9（重要！）
+在启动钓鱼器之前应手动走到钓鱼点，选择鱼竿并在游戏中进入钓鱼。
+按Alt+V进入钓鱼，Alt+X退出钓鱼。
+提示音依照音阶顺序依次为：
+    1. 扫描钓鱼点寻找鱼
+    2. 选择待钓的鱼
+    3. 选择鱼饵
+    4. 准备抛竿
+    5. 检测咬钩
+    6. 控制力度条
+    7. 钓鱼成功
+这也是单次钓鱼时程序的运行顺序。
+钓鱼器出现严重错误时会发出低音蜂鸣并尝试从头开始钓鱼，若钓鱼过程中程序运行连续出现3次严重错误则钓鱼器会自动终止，需要重新按Alt+V以开始钓鱼。
+可能有用的图像与记录存放在log文件夹中。
+
+config.json为键值对组成的json文件. 如果你知道json的格式那应该不难看懂文件的内容. 不过不知道也不要紧, 只要严格按照以下规则(当然这不是完整的json规则)就行: 
+1. 用记事本打开文件
+2. 只改动冒号右侧的true或false, true表示是, false表示否
+
+具体各项的含义如下(json规范中不允许注释, 此处仅表意):
+
+{
+    "useGPU": true, //是否使用GPU推理, 不知道啥意思就true
+    "logAllImgs": true, //是否记录全部图像（错误时的图像始终会被输出，此处指其他图像记录）
+    "logData": true, //是否记录抛竿数据以帮助优化抛竿判定（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）
+
+    "typeToFish": { //是否钓某一类鱼
+        "medaka": true, //花鳉
+        "large_medaka": true, //大号花鳉
+        "stickleback": true, //棘鱼
+        "koi": true, //假龙
+        "butterflyfish": true, //蝶鱼
+        "pufferfish": true, //炮鲀
+        "formalo_ray": true, //佛玛洛鳐
+        "divda_ray": true, //迪芙妲鳐
+        "angler": true, //角鲀
+        "axe_marlin": true //斧枪鱼
+    }
+}
+
+如果你不幸把config.json改爆了以至于不知道怎么读取, 那么还可以把这一行以前"具体各项含义"一行以后的部分复制粘贴到config.json里面, 再去掉"//"与后面的字, 就可以当作一个config.json的模板了(不会真有人这样吧)
+
+----------------------------------------------------------------------------------
+
+Instruction:
+Run HutaoFisher.exe first and then run the game.
+You can set in config.json whether to useGPU inference (useGPU), whether to log all images (logAllImgs) (images in case of error will always be output, but other image logging can be turned off), whether to log casting data to help optimize casting decision (logData) (if this is yes, Alt+Tab will be required to cut out after a failed casting) If yes, Alt+Tab will be required to enter the reason for the error after a failed cast), and whether to catch a certain type of fish (typeToFish)
+Run the game in full screen mode, and the monitor aspect ratio should be 16:9 (important!)
+Before starting the angler you should manually walk to the fishing spot, select the fishing rod and enter fishing in the game.
+Press Alt+V to enter fishing, Alt+X to exit fishing.
+The cues are in order according to the scale.
+    1. Scan the fishing spot for fish
+    2. Select the fish to be caught
+    3. select the bait
+    4. prepare to cast the rod
+    5. detecting the bite
+    6. Control the strength bar
+    7. Fishing success
+This is also the order in which the program will run during a single fishing trip.
+If a serious error occurs in the angler, it will sound a bass beep and try to start fishing from the beginning. If the program runs with 3 serious errors in a row during fishing, the angler will automatically terminate and you need to press Alt+V again to start fishing.
+Possible useful images and logs are stored in the log folder.
+
+config.json is a json file consisting of key-value pairs. If you know the json format it should not be difficult to read the contents of the file. But it does not matter if you do not know, as long as you follow the following rules strictly (of course, this is not the full json rules).
+1. open the file with windows notepad
+2. change only true or false to the right of the colon, true means yes, false means no
+
+The meaning of each item is as follows (annotations are not allowed in the json specification, so this is just an expression):
+
+{
+    "useGPU": true, //Whether to use GPU inference, true if you don't know what it means
+    "logAllImgs": true, // whether to log all images (images in case of errors will always be output, in this case other images are logged)
+    "logData": true, //whether to record casting data to help optimize casting decision (if this is yes, Alt+Tab to cut out the original god after casting failure to enter the reason for the error)
+
+    "typeToFish": { //whether to catch a certain type of fish
+        "medaka": true,
+        "large_medaka": true,
+        "stickleback": true,
+        "koi": true,
+        "butterflyfish": true,
+        "pufferfish": true,
+        "formalo_ray": true,
+        "divda_ray": true,
+        "angler": true,
+        "axe_marlin": true
+    }
+}
+
+If you have the misfortune to change the config.json so much that you don't know how to read it, you can still copy and paste the line after the "specific meaning" line into the config.json, then remove the "//" and the following words, and it will be a template for the config.json (no one really does that, do they?)

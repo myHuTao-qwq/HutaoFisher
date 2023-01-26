@@ -6,6 +6,13 @@
 
 ## 功能更新 Functional Update
 
+#### 2023/1/26
+
+- 引入config.json以将参数整合到配置文件中, 并加入了只钓某些大类的鱼的功能, 顺便简单起见加上了help.txt.
+- 对应处理了main()中初始化程序可能会发生的异常
+
+
+
 #### 2022/10/6
 
 - 优化了钓鱼流程: 如果fisher确定当前的需要的鱼饵与上一条鱼的相同, 则跳过选饵的步骤.
@@ -67,7 +74,7 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 
 先运行HutaoFisher.exe再运行游戏。
 
-可在运行后的命令行界面依次设置是否使用GPU推理，是否记录全部图像（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）
+可在config.json中设置是否使用GPU推理(useGPU)，是否记录全部图像(logAllImgs)（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定(logData)（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）, 以及是否钓某一大类的鱼(typeToFish). 具体config.json的含义见help.txt.
 
 在全屏模式下运行游戏，并且显示器长宽比应为16:9（重要！）
 
@@ -97,7 +104,7 @@ You don't need to clone the source code, just download the latest release.
 
 Run HutaoFisher.exe before launch the game.
 
-You can set whether to use the GPU inference, whether to record all images (image will always be logged when error occurs, but other image record can be turned off), whether to save casting rod data to help optimize rod decision (if this is true, for cast rod failure press Alt + Tab to switch away from the Genshin game and input error reason)
+You can set in config.json whether to useGPU inference (useGPU), whether to log all images (logAllImgs) (images on error will always be output, but other image logging can be turned off), whether to log casting data to help optimize casting decisions (logData) (if this is yes, Alt+Tab will be required to cut out after a failed cast) If yes, you need to Alt+Tab to enter the reason for the error after a failed cast), and whether to catch a certain type of fish (typeToFish). See help.txt for the meaning of the specific config.json.
 
 Run the game in full screen mode with a 16:9 aspect ratio (important!).
 
