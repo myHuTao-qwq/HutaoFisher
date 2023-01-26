@@ -7,6 +7,9 @@
 #include <iostream>
 #include <random>
 
+#include "json.hpp"
+using json = nlohmann::json;
+
 #include "config.h"
 #include "nanodet.h"
 #include "rodnet.h"
@@ -50,6 +53,8 @@ class Fisher {
       11.5, 11.5, 10.5, 9.5,  8.5};  // index is fish label
   const double MaxControlWaiting = 3;
 
+  bool typeToFish[FISH_CLASS_NUM];
+
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;
 
   NanoDet *fishNet;
@@ -80,7 +85,7 @@ class Fisher {
   void errLog();
 
  public:
-  Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath);
+  Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath, json config);
   ~Fisher();
 
   bool working;

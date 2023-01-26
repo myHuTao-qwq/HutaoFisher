@@ -7,6 +7,7 @@
 #cmakedefine RELEASE
 #cmakedefine TEST
 
-#define FISH_CLASS_NUM 10
 #define BAIT_CLASS_NUM 5
 #define TOTAL_CLASS_NUM 12
+#define FISH_CLASS_NUM 10
+#define NON_FISH_CLASS_NUM 2

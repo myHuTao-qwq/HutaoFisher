@@ -18,7 +18,7 @@ const int baitColor[BAIT_CLASS_NUM][3] = {{86, 132, 216},
                                           {254, 67, 168},
                                           {172, 92, 123}};
 
-const std::vector<std::string> fishNames{
+const std::vector<std::string> typeNames{
     "rod",         "err_rod",   "medaka",        "large_medaka",
     "stickleback", "koi",       "butterflyfish", "pufferfish",
     "formalo_ray", "divda_ray", "angler",        "axe_marlin"};
@@ -102,7 +102,7 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
                   color);
 
     char text[256];
-    sprintf(text, "%s %.1f%%", fishNames[bbox.label].c_str(), bbox.score * 100);
+    sprintf(text, "%s %.1f%%", typeNames[bbox.label].c_str(), bbox.score * 100);
 
     int baseLine = 0;
     cv::Size label_size =
@@ -127,7 +127,8 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
   return image;
 }
 
-Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
+Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
+               json config) {
   this->working = false;
   this->fishNet = fishnet;
   // this->rodNet = rodnet;
@@ -145,6 +146,10 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath) {
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
+
+  for (int i = 0; i < FISH_CLASS_NUM; i++) {
+    typeToFish[i] = config["typeToFish"][typeNames[i + NON_FISH_CLASS_NUM]];
+  }
 
   bait = -1;
 
@@ -183,7 +188,15 @@ void Fisher::getBBoxes(bool cover) {
   }
   checkWorking();
 
-  bboxes = fishNet->detect(resized_img, SCORE_THRESHOLD, NMS_THRESHOLD);
+  std::vector<BoxInfo> rawBBoxes, modBBoxes;
+  rawBBoxes = fishNet->detect(resized_img, SCORE_THRESHOLD, NMS_THRESHOLD);
+  for (std::vector<BoxInfo>::iterator i = rawBBoxes.begin();
+       i < rawBBoxes.end(); i++) {
+    if (typeToFish[i->label - NON_FISH_CLASS_NUM]) {
+      modBBoxes.push_back(*i);
+    }
+  }
+  bboxes = modBBoxes;
 
   if (!processWithInputShape) {
     for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
@@ -306,7 +319,7 @@ void Fisher::selectFish() {
     }
   }
 
-  std::cout << "    select fish: " << fishNames[targetFish.label] << std::endl;
+  std::cout << "    select fish: " << typeNames[targetFish.label] << std::endl;
   return;
 }
 
@@ -801,7 +814,7 @@ void Fisher::imgLog(char name[], bool bbox) {
     effect_roi.height = processShape[1];
     cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
     char bbox_filename[256];
-    cv::putText(bboxed_img, "target: " + fishNames[targetFish.label],
+    cv::putText(bboxed_img, "target: " + typeNames[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
     sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),

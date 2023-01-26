@@ -3,6 +3,10 @@
 #include <ctime>
 #include <iostream>
 #include <thread>
+#include <fstream>
+
+#include "json.hpp"
+using json = nlohmann::json;
 
 #include "config.h"
 #include "fishing.h"
@@ -12,9 +16,11 @@
 #ifdef RELEASE
 const std::string imgPath = "resource/imgs";
 const std::string modelPath = "resource/model";
+const std::string configPath = "config.json";
 #else
 const std::string imgPath = "../../resource/imgs";
 const std::string modelPath = "../../resource/model";
+const std::string configPath = "../../config.json";
 #endif
 
 bool useGPU = true;
@@ -51,6 +57,10 @@ int main() {
   }
 #endif
 
+  std::ifstream f(configPath);
+  json config = json::parse(f);
+  f.close();
+
   printf("please choose whether to use GPU to infer: 1-Y 0:N          ");
   std::cin >> useGPU;
 
@@ -58,7 +68,7 @@ int main() {
                   (modelPath + "/nanodet-fish_mod.bin").c_str(), useGPU);
 
   Screen screen;
-  Fisher fisher(&fishnet, &screen, imgPath);
+  Fisher fisher(&fishnet, &screen, imgPath, config);
 
   // fishing process
 

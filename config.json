@@ -1,0 +1,14 @@
+{
+    "typeToFish": {
+        "medaka": true,
+        "large_medaka": false,
+        "stickleback": false,
+        "koi": false,
+        "butterflyfish": false,
+        "pufferfish": false,
+        "formalo_ray": true,
+        "divda_ray": true,
+        "angler": true,
+        "axe_marlin": true
+    }
+}
