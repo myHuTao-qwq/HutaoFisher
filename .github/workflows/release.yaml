@@ -65,7 +65,7 @@ jobs:
         cd fisher
         mkdir HutaoFisher
         mv src/build/Release/fisher.exe HutaoFisher
-        cp -r resource HutaoFisher
+        cp -r resource config.json help.txt HutaoFisher
         7z a HutaoFisher.zip HutaoFisher
     - name: release
       uses: softprops/action-gh-release@v1
