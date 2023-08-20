@@ -7,24 +7,39 @@ const BoxInfo refBBox = {float(NanoDet_InputSize[1]) / 2 - 16,
                          1,
                          0};  // represent the center of image
 
-// 0: fruit paste 1: redrot 2: false worm 3: fake fly 4: sugardew
+/* 0: fruit paste 1: redrot 2: false worm 3: fake fly 4: sugardew 5: sour 6:
+ * flashing*/
 // index represents (fish_lable - 1)
-const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4};
+const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4, 5, 6};
 
 // BGR format
-const int baitColor[BAIT_CLASS_NUM][3] = {{86, 132, 216},
-                                          {74, 79, 192},
-                                          {0, 174, 243},
-                                          {254, 67, 168},
-                                          {172, 92, 123}};
+const int baitColor[BAIT_CLASS_NUM][3] = {
+    {86, 132, 216}, {74, 79, 192}, {0, 174, 243}, {254, 67, 168}, {172, 92, 123}
+    // todo
+};
 
-const std::vector<std::string> typeNames{
-    "rod",         "err_rod",   "medaka",        "large_medaka",
-    "stickleback", "koi",       "butterflyfish", "pufferfish",
-    "formalo_ray", "divda_ray", "angler",        "axe_marlin"};
+const std::vector<std::string> typeNames{"rod",
+                                         "err_rod",
+                                         "medaka",
+                                         "large_medaka",
+                                         "stickleback",
+                                         "koi",
+                                         "butterflyfish",
+                                         "pufferfish",
+                                         "formalo_ray",
+                                         "divda_ray",
+                                         "angler",
+                                         "axe_marlin",
+                                         "heartfeather_bass",
+                                         "axe_marlin"};
 
-const std::vector<std::string> baitNames{"fruit paste", "redrot", "false worm",
-                                         "fake fly", "sugardew"};
+const std::vector<std::string> baitNames{"fruit paste",
+                                         "redrot",
+                                         "false worm",
+                                         "fake fly",
+                                         "sugardew",
+                                         "sour",
+                                         "flashing maintenance mek"};
 
 const int controlColor = 250;  // grayscale
 
@@ -961,7 +976,7 @@ void Fisher::getRodData() {
             return bboxDist(rod, bbox1) < bboxDist(rod, bbox2);
           });  // find the closest fish
 
-      std::cout << "nearest fish: " << labels[targetFish.label] << std::endl;
+      std::cout << "nearest fish: " << typeNames[targetFish.label] << std::endl;
 
       int success;
       printf("Successed? 0: success 1: too close 2: too far              ");
