@@ -160,11 +160,20 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
     baitImgs[i] = cv::imread(imgPath + "/" + baitNames[i] + ".png");
   }
 
+  logAllImgs = config["logAllImgs"];
+  logData = config["logData"];
   for (int i = 0; i < FISH_CLASS_NUM; i++) {
     typeToFish[i] = config["typeToFish"][typeNames[i + NON_FISH_CLASS_NUM]];
   }
-  this->logAllImgs = config["logAllImgs"];
-  this->logData = config["logData"];
+  MaxFailNum = config["MaxFailNum"];
+  MaxRodTries = config["MaxRodTries"];
+  MaxThrowFailNum = config["MaxThrowFailNum"];
+  MaxThrowWaiting = config["MaxThrowWaiting"];
+  for (int i = 0; i < FISH_CLASS_NUM; i++) {
+    MaxBiteWaiting[i] =
+        config["MaxBiteWaiting"][typeNames[NON_FISH_CLASS_NUM + i]];
+  }
+  MaxControlWaiting = config["MaxControlWaiting"];
 
   bait = -1;
 
@@ -481,7 +490,7 @@ void Fisher::throwRod() {
           fishes.push_back(*i);
         }
       }
-      if (fishFailNum == MaxFishFailNum) {
+      if (fishFailNum == MaxThrowFailNum) {
         if (err_rods.empty()) {
           cancelThrowRod(false);
           printf("\n");
@@ -513,7 +522,7 @@ void Fisher::throwRod() {
               fishes.begin(), fishes.end(),
               [err_rod](BoxInfo bbox1, BoxInfo bbox2) {
                 return bboxDist(err_rod, bbox1) < bboxDist(err_rod, bbox2);
-              });  // find the fish closest to err_rod
+              });  // find the fish farthest to err_rod
 
           dx =
               (farthestFish.x1 + farthestFish.x2 - err_rod.x1 - err_rod.x2) / 2;
@@ -527,7 +536,7 @@ void Fisher::throwRod() {
     }
 
     if (targetFishes.empty()) {
-      if (fishFailNum == MaxFishFailNum) {
+      if (fishFailNum == MaxThrowFailNum) {
         cancelThrowRod(false);
         printf("\n");
         throw "throw rod error: cannot find target fish within acceptable tries!";
@@ -537,7 +546,7 @@ void Fisher::throwRod() {
           imgLog("targetFish", true);
         }
         fishFailNum++;
-        // random move to try to rediscover the fish
+        // random move to try to retrieve the fish
         double ang = angDistrib(engine);
         mouseEvent(MOUSEEVENTF_MOVE, dx / 2, dy / 2);
         mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), 90 * sin(ang));
@@ -565,7 +574,7 @@ void Fisher::throwRod() {
 
     switch (getRodState(rod, targetFish)) {
       case -1:
-        if (fishFailNum == MaxFishFailNum) {
+        if (fishFailNum == MaxThrowFailNum) {
           cancelThrowRod(false);
           printf("\n");
           throw "throw rod error: get rod state: Newton-Raphson method cannot converge within iteration limit!";
@@ -854,7 +863,7 @@ void Fisher::fishing() {
       while (!working) {
         Sleep(100);  // wait for fisher launch
       }
-      while (working && (fishingFailCnt < 3) && scanFish()) {
+      while (working && (fishingFailCnt < MaxFailNum) && scanFish()) {
         printf("Fisher: Begin to try to catch a fish!\n");
         try {
           selectFish();
@@ -875,7 +884,7 @@ void Fisher::fishing() {
         }
       }
       if (working) {
-        if (fishingFailCnt >= 3) {
+        if (fishingFailCnt >= MaxFailNum) {
           Sleep(250);
           printf(
               "Fisher: Warning! fisher failed too many times. Please check.\n");
