@@ -52,7 +52,7 @@ config.json为键值对组成的json文件. 如果你知道json的格式那应�
 
     "MaxFailNum": 3, //使钓鱼器自动终止所需连续严重错误的次数
     "MaxRodTries": 25, //抛竿时最大移动钓竿位置次数
-    "MaxThrowFailNum": 5, //抛竿时最大抛竿失败自动重试次数
+    "MaxThrowFailNum": 5, //抛竿时最大错误容许次数(如找不到鱼等)
     "MaxThrowWaiting": 3, //抛竿时等待白圈出现的最长时间(单位:秒)
     "MaxBiteWaiting": { //抛竿后等待某种鱼上钩的最长时间(单位:秒)
         "medaka": 8,
@@ -121,7 +121,7 @@ The meaning of each item is as follows (annotations are not allowed in the json 
 
     "MaxFailNum": 3, //The number of consecutive serious errors required for the fisher to automatically terminate
     "MaxRodTries": 25, //Maximum number of rod position shifts during casting
-    "MaxThrowFailNum": 5, //Maximum number of automatic retries during casting
+    "MaxThrowFailNum": 5, //Maximum number of errors allowed in casting (e.g. no fish found, etc.)
     "MaxThrowWaiting": 3, //Maximum waiting time for the circle to appear during casting (unit: second)
     "MaxBiteWaiting": { //Maximum waiting time to wait for a bite for a certain type of fish after casting (unit: second)
         "medaka": 8,

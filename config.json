@@ -2,7 +2,7 @@
     "useGPU": true,
     "logAllImgs": true,
     "logData": true,
-    
+
     "typeToFish": {
         "medaka": true,
         "large_medaka": true,
@@ -33,8 +33,8 @@
         "divda_ray": 10.5,
         "angler": 9.5,
         "axe_marlin": 8.5,
-        "heartfeather_bass": 10,
-        "maintenance_mek": 10
+        "heartfeather_bass": 8.5,
+        "maintenance_mek": 8
     },
     "MaxControlWaiting": 3
 }

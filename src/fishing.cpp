@@ -648,8 +648,8 @@ void Fisher::checkBite() {
     cv::cvtColor(biteImage, gray, cv::COLOR_BGR2GRAY);
     cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
     // the position of hook icon too
-    cv::Canny(resized(cv::Rect(850, 508, 41, 41)), edge, 50, 150);
-    if (cv::PSNR(edge, pullImg) > 10) {
+    cv::Canny(resized(cv::Rect(850, 508, 41, 41)), edge, 100, 200);
+    if (cv::PSNR(edge, pullImg) > 8.5) {  // a carefully selected value :)
       biteSuccess = true;
       biteTime = double(clock() - startTime) / CLOCKS_PER_SEC;
       break;
