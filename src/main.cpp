@@ -81,8 +81,10 @@ int main() {
     f.close();
 
     const std::vector<std::string> fishNames{
-        "medaka",     "large_medaka", "stickleback", "koi",    "butterflyfish",
-        "pufferfish", "formalo_ray",  "divda_ray",   "angler", "axe_marlin"};
+        "medaka",      "large_medaka",      "stickleback",
+        "koi",         "butterflyfish",     "pufferfish",
+        "formalo_ray", "divda_ray",         "angler",
+        "axe_marlin",  "heartfeather_bass", "maintenance_mek"};
 
     std::cout << "Configurations:\n";
     std::cout << std::setw(32) << std::left

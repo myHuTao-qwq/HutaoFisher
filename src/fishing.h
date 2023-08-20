@@ -58,6 +58,7 @@ class Fisher {
   bool logData;
 
   cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg;
+  cv::Mat baitImgs[BAIT_CLASS_NUM];
 
   NanoDet *fishNet;
   //   RodNet *rodNet;

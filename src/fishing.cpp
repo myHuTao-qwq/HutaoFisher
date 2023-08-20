@@ -12,12 +12,6 @@ const BoxInfo refBBox = {float(NanoDet_InputSize[1]) / 2 - 16,
 // index represents (fish_lable - 1)
 const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4, 5, 6};
 
-// BGR format
-const int baitColor[BAIT_CLASS_NUM][3] = {
-    {86, 132, 216}, {74, 79, 192}, {0, 174, 243}, {254, 67, 168}, {172, 92, 123}
-    // todo
-};
-
 const std::vector<std::string> typeNames{"rod",
                                          "err_rod",
                                          "medaka",
@@ -31,7 +25,7 @@ const std::vector<std::string> typeNames{"rod",
                                          "angler",
                                          "axe_marlin",
                                          "heartfeather_bass",
-                                         "axe_marlin"};
+                                         "maintenance_mek"};
 
 const std::vector<std::string> baitNames{"fruit paste",
                                          "redrot",
@@ -161,6 +155,10 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
+
+  for (int i = 0; i < BAIT_CLASS_NUM; i++) {
+    baitImgs[i] = cv::imread(imgPath + "/" + baitNames[i] + ".png");
+  }
 
   for (int i = 0; i < FISH_CLASS_NUM; i++) {
     typeToFish[i] = config["typeToFish"][typeNames[i + NON_FISH_CLASS_NUM]];
@@ -352,11 +350,13 @@ void Fisher::chooseBait() {
     bait = baitList[targetFish.label - 2];
   }
 
-  int color[3];
-  memcpy(color, baitColor[bait], 3 * sizeof(int));
-
   mouseEvent(MOUSEEVENTF_RIGHTDOWN, 0, 0);
   mouseEvent(MOUSEEVENTF_RIGHTUP, 0, 0);
+
+  mouseEvent(
+      MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 23333,
+      45965);  // move the mouse away from the baits to prevent
+               // mismatching, 23333 45965 is the pos of the cancel button
 
   Sleep(300);  // wait for the window to pop
 
@@ -365,24 +365,21 @@ void Fisher::chooseBait() {
   cv::resize(screenImage, baitScreenshot,
              cv::Size(processShape[0], processShape[1]));
 
-  // x, y is in the region of bait images
-  checkWorking();
-  int x, y = 268;
-  bool found = false;
-  for (x = 379; x < 647; x++) {
-    cv::Vec3b &screencolor = (baitScreenshot.at<cv::Vec3b>(cv::Point(x, y)));
-    if (colorDiff(color, screencolor) < 28) {  // an empirical threshold
-      // cv::imwrite("../../bait.png", baitScreenshot);
-      // printf("pos %d %d  rgb %d %d %d %lf\n", x, y, screencolor[2],
-      //        screencolor[1], screencolor[0], colorDiff(color, screencolor));
-      found = true;
-      break;
-    }
-  }
+  cv::Mat score;
+  double minScore;
+  cv::Point minIdx;
 
-  if (!found) {
-    // click cancel button, 23333 45965 is the pos of the button
-    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 23333, 45965);
+  checkWorking();
+
+  cv::matchTemplate(baitScreenshot, baitImgs[bait], score,
+                    cv::TM_SQDIFF);  // just scanning over the whole screen in
+                                     // fact doesn't cost much time (~30ms).....
+  cv::minMaxLoc(score, &minScore, nullptr, &minIdx, nullptr);
+
+  std::cout << "template diff: " << minScore << "/" << 2e6 << std::endl;
+
+  if (minScore > 2e6) {  // not found, 2e6 is an empirical threshold
+    // click cancel button
     mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 23333, 45965);
     mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 23333, 45965);
     throw "choose bait error: cannot find a proper bait!";
@@ -391,16 +388,16 @@ void Fisher::chooseBait() {
   // click the position of bait
   checkWorking();
   mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,
-             double(x) / double(processShape[0]) * 65535,
-             double(y) / double(processShape[1]) * 65535);
+             double(minIdx.x + 29) / double(processShape[0]) * 65535,
+             double(minIdx.y + 29) / double(processShape[1]) * 65535);
   mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN,
-             double(x) / double(processShape[0]) * 65535,
-             double(y) / double(processShape[1]) * 65535);
+             double(minIdx.x + 29) / double(processShape[0]) * 65535,
+             double(minIdx.y + 29) / double(processShape[1]) * 65535);
   mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP,
-             double(x) / double(processShape[0]) * 65535,
-             double(y) / double(processShape[1]) * 65535);
+             double(minIdx.x + 29) / double(processShape[0]) * 65535,
+             double(minIdx.y + 29) / double(processShape[1]) * 65535);
 
-  // click confirm button, 44543 45965 is the pos of the button
+  // click confirm button, 44543 45965 is its position
   checkWorking();
   Sleep(300);
   mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
@@ -703,7 +700,7 @@ void Fisher::control() {
     screenImage = screen->getScreenshot();
     cv::cvtColor(screenImage, gray, cv::COLOR_BGR2GRAY);
     cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
-    //(498,0,28,216) is the possible position of progress ring
+    //(504,0,16,216) is the possible position of progress ring
     cv::matchTemplate(resized(cv::Rect(504, 0, 16, 216)), centralBarImg, score,
                       cv::TM_CCOEFF_NORMED);
     cv::minMaxLoc(score, nullptr, &maxScore, nullptr, &maxIdx);

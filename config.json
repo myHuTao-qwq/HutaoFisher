@@ -2,7 +2,6 @@
     "useGPU": true,
     "logAllImgs": true,
     "logData": true,
-
     "typeToFish": {
         "medaka": true,
         "large_medaka": true,
@@ -13,6 +12,8 @@
         "formalo_ray": true,
         "divda_ray": true,
         "angler": true,
-        "axe_marlin": true
+        "axe_marlin": true,
+        "heartfeather_bass": true,
+        "maintenance_mek": true
     }
 }
