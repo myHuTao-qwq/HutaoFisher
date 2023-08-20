@@ -65,6 +65,8 @@ jobs:
         cd fisher
         mkdir HutaoFisher
         mv src/build/Release/fisher.exe HutaoFisher
+        cp config.json HutaoFisher
+        cp help.txt HutaoFisher
         cp -r resource HutaoFisher
         7z a HutaoFisher.zip HutaoFisher
     - name: release
