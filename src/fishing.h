@@ -33,7 +33,7 @@ class Fisher {
 #ifdef RELEASE
   const std::string logPath = "log";
 #else
-  const std::string logPath = "../../log";
+  const std::string logPath = "..\\..\\log";
 #endif
 
   const double steps[40][2] = {

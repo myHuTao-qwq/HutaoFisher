@@ -162,6 +162,21 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
 
   logAllImgs = config["logAllImgs"];
   logData = config["logData"];
+
+  system(("if not exist " + logPath + "\\images mkdir " + logPath + "\\images").c_str());
+  if (logData) {
+    std::fstream data;
+    data.open(logPath + "\\data.csv", std::ios::in);
+    if (!data.good()) {
+      std::cout << "log file does not exist -- create log file." << std::endl;
+      data.open(logPath + "\\data.csv", std::ios::out);
+      data << "time,bite_time,rod_x1,rod_x2,rod_y1,rod_y2,fish_x1,"
+              "fish_x2,fish_y1,fish_y2,fish_label,success"
+           << std::endl;
+    }
+    data.close();
+  }
+
   for (int i = 0; i < FISH_CLASS_NUM; i++) {
     typeToFish[i] = config["typeToFish"][typeNames[i + NON_FISH_CLASS_NUM]];
   }
@@ -640,7 +655,7 @@ void Fisher::checkBite() {
     throw "checkBite: the float doesn't splash within acceptable time!";
   }
 
-  double biteTime;
+  double biteTime = 0;
   while (double(clock() - startTime) / CLOCKS_PER_SEC <
          MaxBiteWaiting[targetFish.label - 2]) {
     checkWorking();
@@ -675,10 +690,10 @@ void Fisher::checkBite() {
       std::ofstream data;
       data.open(logPath + "\\data.csv", std::ios::app);
       char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
-              int(time(0)), rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1,
-              targetFish.x2, targetFish.y1, targetFish.y2, targetFish.label - 2,
-              biteState);
+      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
+              int(time(0)), biteTime, rod.x1, rod.x2, rod.y1, rod.y2,
+              targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
+              targetFish.label - 2, biteState);
       data << output << std::endl;
       data.close();
     }

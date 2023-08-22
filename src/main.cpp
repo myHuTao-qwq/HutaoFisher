@@ -46,10 +46,6 @@ int main() {
     hotkey = false;
   }
 
-#ifdef RELEASE
-  system("if not exist log\\images mkdir log\\images");
-#endif
-
 #ifdef TEST
   if (RegisterHotKey(NULL, 2, MOD_ALT,
                      0x41)) {  // 0x41: A, test
