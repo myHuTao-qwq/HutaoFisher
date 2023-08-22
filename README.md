@@ -1,6 +1,6 @@
 # HuTao Fisher
 
-胡桃老婆过生日说她钓鱼不得法，还得自己跳下水抓，我听了心想怎么能亏待老婆呢？于是就写了这个全自动的HuTao Fisher，老婆想钓鱼直接站到水边拿起鱼竿打开钓鱼辅助工具，鱼就自己上钩啦！(x)
+胡桃老婆过生日说她钓鱼不得法, 还得自己跳下水抓, 我听了心想怎么能亏待老婆呢? 于是就找到闻名提瓦特的枫丹科学院, 向他们讲述了这一困难, 希望能够出手相助. 枫丹科学院那些姿势水平高到不知哪里去的院士们听了我的话, 非常的资瓷. 他们表示提瓦特人苦钓鱼久矣! 从枫丹廷的德拉萝诗小姐到须弥城的凯万先生, 都深受钓不上鱼的难题困扰. 若是凭此契机好好钻研, 结合枫丹发条机关术, 须弥生论派祖传生物统计学, 璃月炼丹仙法与来自世界外神秘的RTX3090之力, 必可炼成神机, 造福全提瓦特. 最终大家一起做出了这个全自动的HuTao Fisher, 老婆想钓鱼直接站到水边拿起鱼竿打开钓鱼辅助工具. 鱼就自己上钩啦!(x)
 
 
 
@@ -54,6 +54,8 @@
 - 优化了一些错误情况的处理，使整体鲁棒性加强
 - 实现多分辨率适配。（通过将截屏缩放到一1024\*576的中间层进行处理，因此原则上分辨率高于1024\*576即可正常运行）
 
+欢迎将钓鱼数据(自动截图以及钓鱼成功信息, 即log文件夹内容)邮件发到infinitesimal.q@gmail.com以帮助改善性能. 截图已自动擦除uid.
+
 ---
 
 Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fish) of 7eu7d7. On this basis, I refactored the whole code with C++, and made some changes, and did a little work:
@@ -71,6 +73,8 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 - Optimized the handling of some error cases and enhance the overall robustness
 
 - Achieve multi-resolution adaptation. (By scaling the screen to a 1024\*576 intermediate layer for processing, so in theory if you have a resolution higher than 1024\*576 the fisher can work properly)
+
+Welcome to email your fising data (automatic screenshots and fishing success messages, i.e. the content in folder ./log) to infinitesimal.q@gmail.com to help us improve the program. We have automatically erased the uid in the screenshots.
 
 
 

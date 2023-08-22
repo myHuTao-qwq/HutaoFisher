@@ -2,7 +2,10 @@
 
 https://github.com/myHuTao-qwq/HutaoFisher
 
-胡桃老婆过生日说她钓鱼不得法，还得自己跳下水抓，我听了心想怎么能亏待老婆呢？于是就写了这个全自动的HuTao Fisher，老婆想钓鱼直接站到水边拿起鱼竿打开钓鱼辅助工具，鱼就自己上钩啦！(x)
+胡桃老婆过生日说她钓鱼不得法, 还得自己跳下水抓, 我听了心想怎么能亏待老婆呢? 于是就找到闻名提瓦特的枫丹科学院, 向他们讲述了这一困难, 希望能够出手相助. 枫丹科学院那些姿势水平高到不知哪里去的院士们听了我的话, 非常的资瓷. 他们表示提瓦特人苦钓鱼久矣! 从枫丹廷的德拉萝诗小姐到须弥城的凯万先生, 都深受钓不上鱼的难题困扰. 若是凭此契机好好钻研, 结合枫丹发条机关术, 须弥生论派祖传生物统计学, 璃月炼丹仙法与来自世界外神秘的RTX3090之力, 必可炼成神机, 造福全提瓦特. 最终大家一起做出了这个全自动的HuTao Fisher, 老婆想钓鱼直接站到水边拿起鱼竿打开钓鱼辅助工具. 鱼就自己上钩啦!(x)
+
+欢迎将钓鱼数据(自动截图以及钓鱼成功信息, 即log文件夹内容)邮件发到infinitesimal.q@gmail.com以帮助改善性能. 截图已自动擦除uid.
+Welcome to email your fising data (automatic screenshots and fishing success messages, i.e. the content in folder ./log) to infinitesimal.q@gmail.com to help us improve the program. We have automatically erased the uid in the screenshots.
 
 ----------------------------------------------------------------------------------
 
