@@ -23,9 +23,9 @@
     "MaxThrowFailNum": 5,
     "MaxThrowWaiting": 3,
     "MaxBiteWaiting": {
-        "medaka": 8,
-        "large_medaka": 8.5,
-        "stickleback": 9.5,
+        "medaka": 9,
+        "large_medaka": 9.5,
+        "stickleback": 10.5,
         "koi": 10.5,
         "butterflyfish": 8.5,
         "pufferfish": 11.5,
