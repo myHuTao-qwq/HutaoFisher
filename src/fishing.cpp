@@ -58,6 +58,12 @@ const int progressRingPx[][2] = {{15, 3},
                                  {8, 4},
                                  {12, 3}};
 
+void detached_imwrite(char *filename, cv::Mat img) {
+  std::thread writer([filename, img]() { cv::imwrite(filename, img); });
+  writer.detach();
+  return;
+}
+
 inline void mouseEvent(DWORD dWflags, double dx, double dy) {
   Sleep(100);  // motherfucker why? but without sleeping mouse_event goes wrong
   mouse_event(dWflags, DWORD(dx), DWORD(dy), 0, 0);
@@ -163,7 +169,8 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   logAllImgs = config["logAllImgs"];
   logData = config["logData"];
 
-  system(("if not exist " + logPath + "\\images mkdir " + logPath + "\\images").c_str());
+  system(("if not exist " + logPath + "\\images mkdir " + logPath + "\\images")
+             .c_str());
   if (logData) {
     std::fstream data;
     data.open(logPath + "\\data.csv", std::ios::in);
@@ -462,7 +469,7 @@ void Fisher::throwRod() {
   Beep(G4, 250);
   checkWorking();
   mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);  // prepare to throw
-  Sleep(2000);                             // wait for the rod to appear
+  Sleep(1000);                             // wait for the rod to appear
   checkWorking();
 
   const double pi = 3.14159265358979323846;
@@ -743,15 +750,20 @@ void Fisher::control() {
   bool start = false, end = false;
   double cursorScore, leftScore, rightScore;
 
+  int lastLeftEdgePos, lastRightEdgePos, lastCursorPos;
+  bool first = true;
+
   cv::Mat controlBox, controlBar, progressRing;
 
   while (true) {
     checkWorking();
     screenImage = screen->getScreenshot();
 
-    cv::cvtColor(screenImage, gray, cv::COLOR_BGR2GRAY);
-    cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
-    controlBox = resized(cv::Rect(375, yBase, 273, 16));
+    cv::resize(screenImage, resized,
+               cv::Size(processShape[0], processShape[1]));
+    cv::cvtColor(resized, gray, cv::COLOR_BGR2GRAY);
+
+    controlBox = gray(cv::Rect(375, yBase, 273, 16));
     controlBar = controlBox(cv::Rect(0, 5, 273, 6));
     checkWorking();
 
@@ -785,20 +797,54 @@ void Fisher::control() {
     }
 
     // find right edge
-    cv::matchTemplate(controlBox, rightEdgeImg, score, cv::TM_CCOEFF_NORMED);
+    cv::matchTemplate(controlBar, rightEdgeImg, score, cv::TM_CCOEFF_NORMED);
     cv::minMaxLoc(score, nullptr, &rightScore, nullptr, &maxIdx);
     if (rightScore > 0.85) {
       rightEdgePos = maxIdx.x;
     }
 
-    // printf(" left: %d %lf cursor: %d %lf right: %d %lf\n", leftEdgePos,
-    //        leftScore, cursorPos, cursorScore, rightEdgePos, rightScore);
+    // ------------------------------ debug ------------------------------
+
+    if (first) {
+      lastLeftEdgePos = leftEdgePos;
+      lastRightEdgePos = rightEdgePos;
+      lastCursorPos = cursorPos;
+      first = false;
+    }
+
+    if (abs(leftEdgePos - lastLeftEdgePos) > 20 ||
+        abs(rightEdgePos - lastRightEdgePos) > 20 ||
+        abs(cursorPos - lastCursorPos) >
+            20) {  // experience tell me if this happen there is likely
+                   // a recognition error
+      time_t logTime = time(0);
+      printf(
+          "time: %d pos: left: %d-%d %lf cursor: %d-%d %lf right: %d-%d %lf\n",
+          int(logTime), leftEdgePos, lastLeftEdgePos, leftScore, cursorPos,
+          lastCursorPos, cursorScore, rightEdgePos, lastRightEdgePos,
+          rightScore);
+      std::cout << "warning: recognize control element discontinious movement!"
+                << std::endl;
+
+      char filename[256];
+      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+              int(logTime), "control", leftEdgePos, cursorPos, rightEdgePos);
+
+      // save colorful controlbox
+      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+    }
+
+    lastLeftEdgePos = leftEdgePos;
+    lastRightEdgePos = rightEdgePos;
+    lastCursorPos = cursorPos;
+
+    // ------------------------------ debug ------------------------------
 
     checkWorking();
 
     // check progress
 
-    progressRing = resized(cv::Rect(498, yBase + 23, 28, 29));
+    progressRing = gray(cv::Rect(498, yBase + 23, 28, 29));
     // 20 checkpoints on the ring, but 2 is blocked by stablizer buff
     for (progress = 0; progress < 17; progress++) {
       if (abs(controlColor -
@@ -842,7 +888,7 @@ void Fisher::imgLog(char name[], bool bbox) {
   char filename[256];
   sprintf(filename, "%s/images/%d_%s_orig.png", logPath.c_str(), int(logTime),
           name);
-  cv::imwrite(filename, screenImage);
+  detached_imwrite(filename, screenImage);
 
   if (bbox) {
     object_rect effect_roi;
@@ -855,9 +901,9 @@ void Fisher::imgLog(char name[], bool bbox) {
     cv::putText(bboxed_img, "target: " + typeNames[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
-    sprintf(bbox_filename, "%s/images/%d_%s_bbox.png", logPath.c_str(),
+    sprintf(bbox_filename, "%s/images/%d_%s_bbox.jpg", logPath.c_str(),
             int(logTime), name);
-    cv::imwrite(bbox_filename, bboxed_img);
+    detached_imwrite(bbox_filename, bboxed_img);
   }
 
   return;

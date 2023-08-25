@@ -6,8 +6,8 @@
 
 ### 已知bug:
 
-1. 在枫丹廷渔师钓鱼点夜间以及某些其他情境钓鱼时有概率出现力度控制条左右边框识别错误的情况, 此问题由于难以复现暂时没找到很好的修复方法(虽然估计是模板匹配的模板图像不够好, 但是在没法复现bug的情况下我也不知道怎么找到更好的). 如果可以提供出现问题时的屏幕截图会很有帮助(虽然这估计挺困难的).
-2. 有概率将枫丹地区鱼竿转把识别成维护机关鱼, 将会很快在下一次更新网络参数时解决(
+1. 在某些情境时有概率出现力度控制条左右边框识别错误的情况. 现已定位到问题为模板匹配出错并且编写了记录该错误的代码, 记录了一些出bug的情境. 但是分析数据以找到更好的匹配模板(或者重写该部分)需要一定时间(或者说我懒)因此短时间内可能不会修复(虽然下一个要做的应该就是这个)
+   In some situations, there is a probability of incorrect recognition of the left and right borders of the control bar. The problem has been located and it's a template matching error. I've recorded it by some codes. But analyzing the data to find a better matching template (or rewriting that part) takes a while (i.e. I'm lazy) so it probably won't be fixed very soon (though that should be the next thing to do).
 
 
 
