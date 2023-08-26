@@ -479,7 +479,7 @@ void Fisher::throwRod() {
 
   // try to move the rod to a proper position
   int fishFailNum = 0;
-  float dx = 0, dy = 0;
+  float dx = 0, dy = 0, dl = 0;
 
   std::vector<BoxInfo> targetFishes, rods;
 
@@ -615,6 +615,11 @@ void Fisher::throwRod() {
         return;
       case 1:  // too close
         printf("        too close!\n");
+        dl = sqrt(dx * dx + dy * dy);
+        if (true) {  // set a minimum step
+          dx = dx / dl * 30;
+          dy = dy / dl * 30;
+        }
         mouseEvent(MOUSEEVENTF_MOVE, -dx / 1.5, -dy * 1.5);
         break;
       case 2:  // too far
