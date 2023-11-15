@@ -90,7 +90,7 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
                     object_rect effect_roi) {
   cv::Mat image;
 
-  image = bgr.clone(); //it looks that cvtColor makes error now?
+  image = bgr.clone();  // it looks that cvtColor makes error now?
 
   int src_w = image.cols;
   int src_h = image.rows;
@@ -734,15 +734,27 @@ void Fisher::control() {
     cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
     //(504,0,16,216) is the possible position of progress ring
     cv::matchTemplate(resized(cv::Rect(504, 0, 16, 216)), centralBarImg, score,
-                      cv::TM_CCOEFF_NORMED);
+                      cv::TM_CCOEFF);
     cv::minMaxLoc(score, nullptr, &maxScore, nullptr, &maxIdx);
-    if (maxScore > 0.5) {
+    if (maxScore > 2e5) {
       yBase = maxIdx.y;
       break;
     }
   }
 
-  if (maxScore <= 0.5) {
+  // ----------------------------debug-----------------------------
+  if (logAllImgs) {
+    time_t logTime = time(0);
+
+    char filename[256];
+    sprintf(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
+            int(logTime), "match_controlbar", yBase);
+
+    detached_imwrite(filename, resized(cv::Rect(504, 0, 16, 216)));
+  }
+  // ----------------------------debug-----------------------------
+
+  if (maxScore <= 2e5) {
     throw "control error: control box didn't appear!";
   }
 
@@ -779,6 +791,21 @@ void Fisher::control() {
         if (end) {
           printf("    control: succeed!\n");
         } else {
+          time_t logTime = time(0);
+          printf(
+              "time: %d pos: left: %d-%d %lf cursor: %d-%d %lf right: %d-%d "
+              "%lf\n",
+              int(logTime), leftEdgePos, lastLeftEdgePos, leftScore, cursorPos,
+              lastCursorPos, cursorScore, rightEdgePos, lastRightEdgePos,
+              rightScore);
+
+          char filename[256];
+          sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                  int(logTime), "control_fail", leftEdgePos, cursorPos,
+                  rightEdgePos);
+
+          // save colorful controlbox
+          detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
           throw "control error: control fail!";
         }
         mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
