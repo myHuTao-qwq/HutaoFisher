@@ -702,17 +702,17 @@ void Fisher::checkBite() {
   // data collect----------------------------------------------------
   if (logData) {
     int biteState = -1;
-    bool closest = true;  // only log the case of closest fish
+    bool record = true;  // to guarentee the recorded fish is the biting fish
 
     for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
          i++) {
-      if (i->label == targetFish.label &&
-          bboxDist(rod, rod, targetFish) < bboxDist(rod, rod, *i)) {
-        closest = false;
+      if (i->label == targetFish.label && !bboxEqual(targetFish, *i) &&
+          bboxDist(rod, rod, *i) < bboxDist(rod, rod, targetFish) * 2) {
+        record = false;
       }
     }
 
-    if (closest) {
+    if (record) {
       if (biteSuccess) {
         biteState = 0;
       } else {
