@@ -11,7 +11,7 @@ Welcome to email your fising data (automatic screenshots and fishing success mes
 
 使用说明:
 先运行HutaoFisher.exe再运行游戏。
-可在config.json中设置是否使用GPU推理(useGPU)，是否记录全部图像(logAllImgs)（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定(logData)（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）, 以及是否钓某一大类的鱼(typeToFish)
+可在config.json中设置是否使用GPU推理(useGPU)，是否记录全部图像(logAllImgs)（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定(logData)（此项若为是，则抛竿失败后响提示音时需Alt+Tab切出原神输入错误原因）, 以及是否钓某一大类的鱼(typeToFish)
 在全屏模式下运行游戏，并且显示器长宽比应为16:9（重要！）
 在启动钓鱼器之前应手动走到钓鱼点，选择鱼竿并在游戏中进入钓鱼。
 按Alt+V进入钓鱼，Alt+X退出钓鱼。
@@ -24,7 +24,7 @@ Welcome to email your fising data (automatic screenshots and fishing success mes
     6. 控制力度条
     7. 钓鱼成功
 这也是单次钓鱼时程序的运行顺序。
-钓鱼器出现严重错误时会发出低音蜂鸣并尝试从头开始钓鱼，若钓鱼过程中程序运行连续出现3次严重错误则钓鱼器会自动终止，需要重新按Alt+V以开始钓鱼。
+钓鱼器出现严重错误时会发出低音蜂鸣并尝试从头开始钓鱼，若钓鱼过程中程序运行连续出现3次严重错误则钓鱼器会自动终止，需要手动将游戏中的钓鱼状态恢复到初始状态再重新按Alt+V以开始钓鱼。
 可能有用的图像与记录存放在log文件夹中。
 
 config.json为键值对组成的json文件. 如果你知道json的格式那应该不难看懂文件的内容. 不过不知道也不要紧, 只要严格按照以下规则(当然这不是完整的json规则)就行: 
@@ -80,7 +80,7 @@ config.json为键值对组成的json文件. 如果你知道json的格式那应�
 
 Instruction:
 Run HutaoFisher.exe first and then run the game.
-You can set in config.json whether to useGPU inference (useGPU), whether to log all images (logAllImgs) (images in case of error will always be output, but other image logging can be turned off), whether to log casting data to help optimize casting decision (logData) (if this is yes, Alt+Tab will be required to cut out after a failed casting) If yes, Alt+Tab will be required to enter the reason for the error after a failed cast), and whether to catch a certain type of fish (typeToFish)
+You can set in config.json whether to useGPU inference (useGPU), whether to log all images (logAllImgs) (images in case of error will always be output, but other image logging can be turned off), whether to log casting data to help optimize casting decision (logData) (If yes, when the prompt tone is played after the rod casting fails, you need to press Alt+Tab to enter the failure reason), and whether to catch a certain type of fish (typeToFish)
 Run the game in full screen mode, and the monitor aspect ratio should be 16:9 (important!)
 Before starting the angler you should manually walk to the fishing spot, select the fishing rod and enter fishing in the game.
 Press Alt+V to enter fishing, Alt+X to exit fishing.
@@ -93,7 +93,7 @@ The cues are in order according to the scale.
     6. Control the strength bar
     7. Fishing success
 This is also the order in which the program will run during a single fishing trip.
-If a serious error occurs in the angler, it will sound a bass beep and try to start fishing from the beginning. If the program runs with 3 serious errors in a row during fishing, the angler will automatically terminate and you need to press Alt+V again to start fishing.
+If a serious error occurs in the angler, it will sound a bass beep and try to start fishing from the beginning. If the program runs with 3 serious errors in a row during fishing, the angler will automatically terminate and you need to restore the fishing status in the game to initial state then press Alt+V again to restart fishing.
 Possible useful images and logs are stored in the log folder.
 
 config.json is a json file consisting of key-value pairs. If you know the json format it should not be difficult to read the contents of the file. But it does not matter if you do not know, as long as you follow the following rules strictly (of course, this is not the full json rules).
