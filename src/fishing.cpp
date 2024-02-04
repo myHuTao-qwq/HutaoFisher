@@ -78,12 +78,27 @@ double bboxDist(BoxInfo rod, BoxInfo fish1,
       pow(((fish1.y1 + fish1.y2) - (fish2.y1 + fish2.y2)) * ratio / 2, 2));
 }
 
+bool bboxEqual(BoxInfo box1, BoxInfo box2) {
+  return box1.label == box2.label && box1.x1 == box2.x1 && box1.x2 == box2.x2 &&
+         box1.y1 == box2.y1 && box1.y2 == box2.y2;
+}
+
 double bboxDist(BoxInfo rod, BoxInfo fish) { return bboxDist(rod, rod, fish); }
 
 double colorDiff(const int refColor[], cv::Vec3b screenColor) {
   return sqrt(pow(refColor[0] - screenColor[0], 2) +
               pow(refColor[1] - screenColor[1], 2) +
               pow(refColor[2] - screenColor[2], 2));
+}
+
+cv::Rect bbox2ROI(BoxInfo box, const int *boundary) {
+  int x, y, w, h;
+  int pad = 10;
+  x = std::max(int(floor(box.x1)) - pad, 0);
+  y = std::max(int(floor(box.y1)) - pad, 0);
+  w = std::min(int(ceil(box.x2)) + pad, boundary[0]) - x;
+  h = std::min(int(ceil(box.y2)) + pad, boundary[1]) - y;
+  return cv::Rect(x, y, w, h);
 }
 
 cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
@@ -177,9 +192,7 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
     if (!data.good()) {
       std::cout << "log file does not exist -- create log file." << std::endl;
       data.open(logPath + "\\data.csv", std::ios::out);
-      data << "time,bite_time,rod_x1,rod_x2,rod_y1,rod_y2,fish_x1,"
-              "fish_x2,fish_y1,fish_y2,fish_label,success"
-           << std::endl;
+      data << "filename,bite_time,fish_label,success" << std::endl;
     }
     data.close();
   }
@@ -689,25 +702,52 @@ void Fisher::checkBite() {
   // data collect----------------------------------------------------
   if (logData) {
     int biteState = -1;
+    bool closest = true;  // only log the case of closest fish
 
-    if (biteSuccess) {
-      biteState = 0;
-    } else {
-      printf(
-          "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
-          "save\n");
-      std::cin >> biteState;
+    for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
+         i++) {
+      if (i->label == targetFish.label &&
+          bboxDist(rod, rod, targetFish) < bboxDist(rod, rod, *i)) {
+        closest = false;
+      }
     }
-    if (biteState == 0 || biteState == 1 || biteState == 2) {
-      std::ofstream data;
-      data.open(logPath + "\\data.csv", std::ios::app);
-      char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
-              int(time(0)), biteTime, rod.x1, rod.x2, rod.y1, rod.y2,
-              targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
-              targetFish.label - 2, biteState);
-      data << output << std::endl;
-      data.close();
+
+    if (closest) {
+      if (biteSuccess) {
+        biteState = 0;
+      } else {
+        Beep(C4, 250);
+        printf(
+            "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
+            "save\n");
+        std::cin >> biteState;
+      }
+      if (biteState == 0 || biteState == 1 || biteState == 2) {
+        int logTime = int(time(0));
+
+        std::ofstream data;
+        data.open(logPath + "\\data.csv", std::ios::app);
+        char output[1024];
+        sprintf(output, "%d_bite.png, %f, %d, %d", logTime, biteTime,
+                targetFish.label - 2, biteState);
+        data << output << std::endl;
+        data.close();
+
+        cv::Mat resized;
+        cv::resize(screenImage, resized,
+                   cv::Size(processShape[0], processShape[1]));
+        cv::Mat roiImage(processShape[1], processShape[0], resized.type(),
+                         cv::Scalar(0));
+        resized(bbox2ROI(rod, processShape))
+            .copyTo(roiImage(bbox2ROI(rod, processShape)));
+        resized(bbox2ROI(targetFish, processShape))
+            .copyTo(roiImage(bbox2ROI(targetFish, processShape)));
+
+        char filename[256];
+        sprintf(filename, "%s/images/%d_bite.png", logPath.c_str(), logTime);
+
+        detached_imwrite(filename, roiImage);
+      }
     }
   }
   // data collect----------------------------------------------------
