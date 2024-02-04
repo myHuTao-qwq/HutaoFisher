@@ -90,7 +90,7 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
                     object_rect effect_roi) {
   cv::Mat image;
 
-  image = bgr.clone(); //it looks that cvtColor makes error now?
+  image = bgr.clone();  // it looks that cvtColor makes error now?
 
   int src_w = image.cols;
   int src_h = image.rows;
@@ -157,6 +157,10 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
+  leftEdgeMask =
+      cv::imread(imgPath + "/leftEdgeMask.png", cv::IMREAD_GRAYSCALE);
+  rightEdgeMask =
+      cv::imread(imgPath + "/rightEdgeMask.png", cv::IMREAD_GRAYSCALE);
 
   for (int i = 0; i < BAIT_CLASS_NUM; i++) {
     baitImgs[i] = cv::imread(imgPath + "/" + baitNames[i] + ".png");
@@ -752,9 +756,9 @@ void Fisher::control() {
   double cursorScore, leftScore, rightScore;
 
   int lastLeftEdgePos, lastRightEdgePos, lastCursorPos;
-  bool first = true;
+  bool first = true, matching_err = false;
 
-  cv::Mat controlBox, controlBar, progressRing;
+  cv::Mat controlBox, progressRing;
 
   while (true) {
     checkWorking();
@@ -765,7 +769,6 @@ void Fisher::control() {
     cv::cvtColor(resized, gray, cv::COLOR_BGR2GRAY);
 
     controlBox = gray(cv::Rect(375, yBase, 273, 16));
-    controlBar = controlBox(cv::Rect(0, 5, 273, 6));
     checkWorking();
 
     // find cursor
@@ -789,19 +792,28 @@ void Fisher::control() {
     }
 
     start = true;
+    matching_err = false;
 
     // find left edge
-    cv::matchTemplate(controlBar, leftEdgeImg, score, cv::TM_CCOEFF_NORMED);
+    cv::matchTemplate(controlBox, leftEdgeImg, score, cv::TM_CCOEFF_NORMED,
+                      leftEdgeMask);
     cv::minMaxLoc(score, nullptr, &leftScore, nullptr, &maxIdx);
-    if (leftScore > 0.85) {
+    if (leftScore > 0.68) {
       leftEdgePos = maxIdx.x;
+    } else {
+      // leftEdgePos = cursorPos;
+      matching_err = true;
     }
 
     // find right edge
-    cv::matchTemplate(controlBar, rightEdgeImg, score, cv::TM_CCOEFF_NORMED);
+    cv::matchTemplate(controlBox, rightEdgeImg, score, cv::TM_CCOEFF_NORMED,
+                      rightEdgeMask);
     cv::minMaxLoc(score, nullptr, &rightScore, nullptr, &maxIdx);
-    if (rightScore > 0.85) {
+    if (rightScore > 0.68) {
       rightEdgePos = maxIdx.x;
+    } else {
+      // rightEdgePos = cursorPos;
+      matching_err = true;
     }
 
     // ------------------------------ debug ------------------------------
@@ -813,11 +825,28 @@ void Fisher::control() {
       first = false;
     }
 
-    if (abs(leftEdgePos - lastLeftEdgePos) > 20 ||
-        abs(rightEdgePos - lastRightEdgePos) > 20 ||
-        abs(cursorPos - lastCursorPos) >
-            20) {  // experience tell me if this happen there is likely
-                   // a recognition error
+    if (matching_err) {
+      time_t logTime = time(0);
+      printf(
+          "time: %d pos: left: %d-%d %lf cursor: %d-%d %lf right: %d-%d %lf\n",
+          int(logTime), leftEdgePos, lastLeftEdgePos, leftScore, cursorPos,
+          lastCursorPos, cursorScore, rightEdgePos, lastRightEdgePos,
+          rightScore);
+      std::cout << "warning: recognize control element matching error!"
+                << std::endl;
+      if (logAllImgs) {
+        char filename[256];
+        sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                int(logTime), "control_matching", leftEdgePos, cursorPos,
+                rightEdgePos);
+
+        // save colorful controlbox
+        detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+      }
+    } else if ((leftEdgePos - lastLeftEdgePos) > 30 ||
+               abs(rightEdgePos - lastRightEdgePos) > 30 ||
+               abs(cursorPos - lastCursorPos) > 30) {
+      // experience tell me if this happen there is likely a recognition error
       time_t logTime = time(0);
       printf(
           "time: %d pos: left: %d-%d %lf cursor: %d-%d %lf right: %d-%d %lf\n",
@@ -827,12 +856,15 @@ void Fisher::control() {
       std::cout << "warning: recognize control element discontinious movement!"
                 << std::endl;
 
-      char filename[256];
-      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-              int(logTime), "control", leftEdgePos, cursorPos, rightEdgePos);
+      if (logAllImgs) {
+        char filename[256];
+        sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                int(logTime), "control_moving", leftEdgePos, cursorPos,
+                rightEdgePos);
 
-      // save colorful controlbox
-      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+        // save colorful controlbox
+        detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+      }
     }
 
     lastLeftEdgePos = leftEdgePos;
