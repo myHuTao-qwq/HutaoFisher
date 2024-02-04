@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1...3.5)
 set(CMAKE_CXX_STANDARD 17)
 
-project(fisher VERSION 4.2.0)
+project(fisher VERSION 4.4.0)
 
 option(RELEASE "change directories" OFF)
 

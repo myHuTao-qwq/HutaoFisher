@@ -78,12 +78,27 @@ double bboxDist(BoxInfo rod, BoxInfo fish1,
       pow(((fish1.y1 + fish1.y2) - (fish2.y1 + fish2.y2)) * ratio / 2, 2));
 }
 
+bool bboxEqual(BoxInfo box1, BoxInfo box2) {
+  return box1.label == box2.label && box1.x1 == box2.x1 && box1.x2 == box2.x2 &&
+         box1.y1 == box2.y1 && box1.y2 == box2.y2;
+}
+
 double bboxDist(BoxInfo rod, BoxInfo fish) { return bboxDist(rod, rod, fish); }
 
 double colorDiff(const int refColor[], cv::Vec3b screenColor) {
   return sqrt(pow(refColor[0] - screenColor[0], 2) +
               pow(refColor[1] - screenColor[1], 2) +
               pow(refColor[2] - screenColor[2], 2));
+}
+
+cv::Rect bbox2ROI(BoxInfo box, const int *boundary) {
+  int x, y, w, h;
+  int pad = 10;
+  x = std::max(int(floor(box.x1)) - pad, 0);
+  y = std::max(int(floor(box.y1)) - pad, 0);
+  w = std::min(int(ceil(box.x2)) + pad, boundary[0]) - x;
+  h = std::min(int(ceil(box.y2)) + pad, boundary[1]) - y;
+  return cv::Rect(x, y, w, h);
 }
 
 cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
@@ -157,6 +172,10 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
+  leftEdgeMask =
+      cv::imread(imgPath + "/leftEdgeMask.png", cv::IMREAD_GRAYSCALE);
+  rightEdgeMask =
+      cv::imread(imgPath + "/rightEdgeMask.png", cv::IMREAD_GRAYSCALE);
 
   for (int i = 0; i < BAIT_CLASS_NUM; i++) {
     baitImgs[i] = cv::imread(imgPath + "/" + baitNames[i] + ".png");
@@ -173,9 +192,7 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
     if (!data.good()) {
       std::cout << "log file does not exist -- create log file." << std::endl;
       data.open(logPath + "\\data.csv", std::ios::out);
-      data << "time,bite_time,rod_x1,rod_x2,rod_y1,rod_y2,fish_x1,"
-              "fish_x2,fish_y1,fish_y2,fish_label,success"
-           << std::endl;
+      data << "filename,bite_time,fish_label,success" << std::endl;
     }
     data.close();
   }
@@ -685,25 +702,52 @@ void Fisher::checkBite() {
   // data collect----------------------------------------------------
   if (logData) {
     int biteState = -1;
+    bool closest = true;  // only log the case of closest fish
 
-    if (biteSuccess) {
-      biteState = 0;
-    } else {
-      printf(
-          "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
-          "save\n");
-      std::cin >> biteState;
+    for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
+         i++) {
+      if (i->label == targetFish.label &&
+          bboxDist(rod, rod, targetFish) < bboxDist(rod, rod, *i)) {
+        closest = false;
+      }
     }
-    if (biteState == 0 || biteState == 1 || biteState == 2) {
-      std::ofstream data;
-      data.open(logPath + "\\data.csv", std::ios::app);
-      char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
-              int(time(0)), biteTime, rod.x1, rod.x2, rod.y1, rod.y2,
-              targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
-              targetFish.label - 2, biteState);
-      data << output << std::endl;
-      data.close();
+
+    if (closest) {
+      if (biteSuccess) {
+        biteState = 0;
+      } else {
+        Beep(C4, 250);
+        printf(
+            "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
+            "save\n");
+        std::cin >> biteState;
+      }
+      if (biteState == 0 || biteState == 1 || biteState == 2) {
+        int logTime = int(time(0));
+
+        std::ofstream data;
+        data.open(logPath + "\\data.csv", std::ios::app);
+        char output[1024];
+        sprintf(output, "%d_bite.png, %f, %d, %d", logTime, biteTime,
+                targetFish.label - 2, biteState);
+        data << output << std::endl;
+        data.close();
+
+        cv::Mat resized;
+        cv::resize(screenImage, resized,
+                   cv::Size(processShape[0], processShape[1]));
+        cv::Mat roiImage(processShape[1], processShape[0], resized.type(),
+                         cv::Scalar(0));
+        resized(bbox2ROI(rod, processShape))
+            .copyTo(roiImage(bbox2ROI(rod, processShape)));
+        resized(bbox2ROI(targetFish, processShape))
+            .copyTo(roiImage(bbox2ROI(targetFish, processShape)));
+
+        char filename[256];
+        sprintf(filename, "%s/images/%d_bite.png", logPath.c_str(), logTime);
+
+        detached_imwrite(filename, roiImage);
+      }
     }
   }
   // data collect----------------------------------------------------
@@ -764,9 +808,9 @@ void Fisher::control() {
   double cursorScore, leftScore, rightScore;
 
   int lastLeftEdgePos, lastRightEdgePos, lastCursorPos;
-  bool first = true;
+  bool first = true, matching_err = false;
 
-  cv::Mat controlBox, controlBar, progressRing;
+  cv::Mat controlBox, progressRing;
 
   while (true) {
     checkWorking();
@@ -777,7 +821,6 @@ void Fisher::control() {
     cv::cvtColor(resized, gray, cv::COLOR_BGR2GRAY);
 
     controlBox = gray(cv::Rect(375, yBase, 273, 16));
-    controlBar = controlBox(cv::Rect(0, 5, 273, 6));
     checkWorking();
 
     // find cursor
@@ -816,19 +859,28 @@ void Fisher::control() {
     }
 
     start = true;
+    matching_err = false;
 
     // find left edge
-    cv::matchTemplate(controlBar, leftEdgeImg, score, cv::TM_CCOEFF_NORMED);
+    cv::matchTemplate(controlBox, leftEdgeImg, score, cv::TM_CCOEFF_NORMED,
+                      leftEdgeMask);
     cv::minMaxLoc(score, nullptr, &leftScore, nullptr, &maxIdx);
-    if (leftScore > 0.85) {
+    if (leftScore > 0.68) {
       leftEdgePos = maxIdx.x;
+    } else {
+      // leftEdgePos = cursorPos;
+      matching_err = true;
     }
 
     // find right edge
-    cv::matchTemplate(controlBar, rightEdgeImg, score, cv::TM_CCOEFF_NORMED);
+    cv::matchTemplate(controlBox, rightEdgeImg, score, cv::TM_CCOEFF_NORMED,
+                      rightEdgeMask);
     cv::minMaxLoc(score, nullptr, &rightScore, nullptr, &maxIdx);
-    if (rightScore > 0.85) {
+    if (rightScore > 0.68) {
       rightEdgePos = maxIdx.x;
+    } else {
+      // rightEdgePos = cursorPos;
+      matching_err = true;
     }
 
     // ------------------------------ debug ------------------------------
@@ -840,11 +892,28 @@ void Fisher::control() {
       first = false;
     }
 
-    if (abs(leftEdgePos - lastLeftEdgePos) > 20 ||
-        abs(rightEdgePos - lastRightEdgePos) > 20 ||
-        abs(cursorPos - lastCursorPos) >
-            20) {  // experience tell me if this happen there is likely
-                   // a recognition error
+    if (matching_err) {
+      time_t logTime = time(0);
+      printf(
+          "time: %d pos: left: %d-%d %lf cursor: %d-%d %lf right: %d-%d %lf\n",
+          int(logTime), leftEdgePos, lastLeftEdgePos, leftScore, cursorPos,
+          lastCursorPos, cursorScore, rightEdgePos, lastRightEdgePos,
+          rightScore);
+      std::cout << "warning: recognize control element matching error!"
+                << std::endl;
+      if (logAllImgs) {
+        char filename[256];
+        sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                int(logTime), "control_matching", leftEdgePos, cursorPos,
+                rightEdgePos);
+
+        // save colorful controlbox
+        detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+      }
+    } else if ((leftEdgePos - lastLeftEdgePos) > 30 ||
+               abs(rightEdgePos - lastRightEdgePos) > 30 ||
+               abs(cursorPos - lastCursorPos) > 30) {
+      // experience tell me if this happen there is likely a recognition error
       time_t logTime = time(0);
       printf(
           "time: %d pos: left: %d-%d %lf cursor: %d-%d %lf right: %d-%d %lf\n",
@@ -854,12 +923,15 @@ void Fisher::control() {
       std::cout << "warning: recognize control element discontinious movement!"
                 << std::endl;
 
-      char filename[256];
-      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-              int(logTime), "control", leftEdgePos, cursorPos, rightEdgePos);
+      if (logAllImgs) {
+        char filename[256];
+        sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                int(logTime), "control_moving", leftEdgePos, cursorPos,
+                rightEdgePos);
 
-      // save colorful controlbox
-      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+        // save colorful controlbox
+        detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+      }
     }
 
     lastLeftEdgePos = leftEdgePos;

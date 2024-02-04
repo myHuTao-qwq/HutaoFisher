@@ -4,14 +4,22 @@
 
 
 
-### 已知bug:
-
-1. 在某些情境时有概率出现力度控制条左右边框识别错误的情况. 现已定位到问题为模板匹配出错并且编写了记录该错误的代码, 记录了一些出bug的情境. 但是分析数据以找到更好的匹配模板(或者重写该部分)需要一定时间(或者说我懒)因此短时间内可能不会修复(虽然下一个要做的应该就是这个)
-   In some situations, there is a probability of incorrect recognition of the left and right borders of the control bar. The problem has been located and it's a template matching error. I've recorded it by some codes. But analyzing the data to find a better matching template (or rewriting that part) takes a while (i.e. I'm lazy) so it probably won't be fixed very soon (though that should be the next thing to do).
-
-
-
 ## 功能更新 Functional Update
+
+#### 2024/2/4
+
+- 适配沉玉谷钓鱼点与鱼
+- 优化了确定最佳张力区左右边界的模板匹配过程, 基本修复了控制失败的bug
+- 改进了采集抛竿-咬钩数据的方式
+
+
+
+#### 2023/11/16
+
+- 修复了一个在枫丹特定水域会把海浪条纹识别成控制框导致钓鱼失败的bug
+- 更新模型参数, 优化了在4.1 4.2新区域钓鱼点的表现
+
+
 
 #### 2023/11/16
 
