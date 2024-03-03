@@ -65,7 +65,7 @@ void detached_imwrite(char *filename, cv::Mat img) {
 }
 
 inline void mouseEvent(DWORD dWflags, double dx, double dy) {
-  Sleep(100);  // motherfucker why? but without sleeping mouse_event goes wrong
+  Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
   mouse_event(dWflags, DWORD(dx), DWORD(dy), 0, 0);
   return;
 }
@@ -297,7 +297,7 @@ bool Fisher::scanFish() {
       if (bboxes.empty()) {  // found no fish
         mouseEvent(MOUSEEVENTF_MOVE, int(650 * steps[j][0]),
                    int(800 * steps[j][1]));
-        Sleep(300);
+        Sleep(100);
       } else {
         printf("    scan fish: find fish!\n");
         return true;  // found fish
@@ -629,7 +629,7 @@ void Fisher::throwRod() {
       case 1:  // too close
         printf("        too close!\n");
         dl = sqrt(dx * dx + dy * dy);
-        if (true) {  // set a minimum step
+        if (dl < 30) {  // set a minimum step
           dx = dx / dl * 30;
           dy = dy / dl * 30;
         }
@@ -787,6 +787,7 @@ void Fisher::control() {
   }
 
   // ----------------------------debug-----------------------------
+#ifndef RELEASE
   if (logAllImgs) {
     time_t logTime = time(0);
 
@@ -796,6 +797,7 @@ void Fisher::control() {
 
     detached_imwrite(filename, resized(cv::Rect(504, 0, 16, 216)));
   }
+#endif
   // ----------------------------debug-----------------------------
 
   if (maxScore <= 2e5) {
@@ -884,7 +886,7 @@ void Fisher::control() {
     }
 
     // ------------------------------ debug ------------------------------
-
+#ifndef RELEASE
     if (first) {
       lastLeftEdgePos = leftEdgePos;
       lastRightEdgePos = rightEdgePos;
@@ -937,7 +939,7 @@ void Fisher::control() {
     lastLeftEdgePos = leftEdgePos;
     lastRightEdgePos = rightEdgePos;
     lastCursorPos = cursorPos;
-
+#endif
     // ------------------------------ debug ------------------------------
 
     checkWorking();
