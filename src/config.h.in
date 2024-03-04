@@ -5,6 +5,7 @@
 #define fisher_VERSION_PATCH @fisher_VERSION_PATCH@
 
 #cmakedefine RELEASE
+#cmakedefine DATA_COLLECT
 #cmakedefine TEST
 
 #define BAIT_CLASS_NUM 7

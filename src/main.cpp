@@ -24,9 +24,29 @@ const std::string configPath = "../../config.json";
 #endif
 
 int main() {
+#ifdef DATA_COLLECT
+  printf("Version: %d.%d.%d_DATA_COLLECT\n", fisher_VERSION_MAJOR,
+         fisher_VERSION_MINOR, fisher_VERSION_PATCH);
+#else
   printf("Version: %d.%d.%d\n", fisher_VERSION_MAJOR, fisher_VERSION_MINOR,
          fisher_VERSION_PATCH);
+#endif
   printf("Hutao Fisher guide: Alt+V launch fisher; Alt+X stop fisher\n");
+
+#ifdef DATA_COLLECT
+  printf(
+      "##################################################################\n"
+      "#                                                                #\n"
+      "#    WARNING!    WARNING!    WARNING!    WARNING!    WARNING!    #\n"
+      "#                                                                #\n"
+      "#    This version of HutaoFisher is compiled for data collec-    #\n"
+      "#    tion and test. It cannot function correctly as the          #\n"
+      "#    version ready to be released.                               #\n"
+      "#                                                                #\n"
+      "#    WARNING!    WARNING!    WARNING!    WARNING!    WARNING!    #\n"
+      "#                                                                #\n"
+      "##################################################################\n");
+#endif
 
   // init
   bool hotkey = true;

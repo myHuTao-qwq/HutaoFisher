@@ -161,6 +161,9 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   this->screen = screen;
   this->ratio = double(screen->m_width) / double(processShape[0]);
 
+  std::random_device seed;
+  random_engine = std::mt19937(seed());
+
   processWithInputShape = (processShape[0] == fishNet->input_size[1] &&
                            processShape[1] == fishNet->input_size[0]);
   fishnetRatio[0] = float(fishNet->input_size[1]) / processShape[0];
@@ -267,11 +270,27 @@ void Fisher::getBBoxes(bool cover) {
     }
   }
 
+// #ifdef DATA_COLLECT
+//   // 1/50 probility to randomly record image
+//   std::uniform_int_distribution<int> intDist(1, 1);
+//   if (intDist(random_engine) == 1) {
+//     imgLog("random", true);
+//   }
+// #endif
+
   checkWorking();
   return;
 }
 
 int Fisher::getRodState(BoxInfo rod, BoxInfo fish) {
+#ifdef DATA_COLLECT
+  // 1/3 probility to make the fisher beleive the rod is in proper position,
+  // ignoring whether it's a real proper position
+  std::uniform_int_distribution<int> intDist(0, 2);
+  if (intDist(random_engine) == 0) {
+    return 0;
+  }
+#endif
   rodInput input;
   input.rod_x1 = rod.x1;
   input.rod_x2 = rod.x2;
@@ -304,9 +323,9 @@ bool Fisher::scanFish() {
       }
     }
   }
-  if (logAllImgs) {
-    imgLog("scan", false);
-  }
+#ifdef DATA_COLLECT
+  imgLog("scan", false);
+#endif
   return false;
 }
 
@@ -316,7 +335,7 @@ void Fisher::selectFish() {
   checkWorking();
   if (bboxes.empty()) {  // only can be triggered in test
     throw "select fish error: there is no fish in screen!";
-    return;
+    // return;
   }
   // std::sort(bboxes.begin(), bboxes.end(), [](BoxInfo bbox1, BoxInfo bbox2) {
   //   return bboxDist(refBBox, bbox1) < bboxDist(refBBox, bbox2);
@@ -332,9 +351,9 @@ void Fisher::selectFish() {
     throw "select fish error: there should be no err_rod in screen!";
   }
   targetFish = bboxes[0];
-  if (logAllImgs) {
-    imgLog("select", true);
-  }
+#ifdef DATA_COLLECT
+  imgLog("select", true);
+#endif
   BoxInfo lastTargetFish;
 
   float dx = 0, dy = 0;
@@ -486,8 +505,6 @@ void Fisher::throwRod() {
   checkWorking();
 
   const double pi = 3.14159265358979323846;
-  std::random_device seed;
-  std::mt19937 engine(seed());
   std::uniform_real_distribution<> angDistrib(0, 2 * pi);
 
   // try to move the rod to a proper position
@@ -538,12 +555,12 @@ void Fisher::throwRod() {
       } else {
         if (err_rods.empty() || fishes.empty()) {
           printf("        find no rod!\n");
-          if (logAllImgs) {
-            imgLog("err_rod", true);
-          }
+#ifdef DATA_COLLECT
+          imgLog("err_rod", true);
+#endif
           fishFailNum++;
           // random move to try to rediscover the rod and fish
-          double ang = angDistrib(engine);
+          double ang = angDistrib(random_engine);
           mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), 45 + 90 * sin(ang));
         } else {
           printf("        the position of rod is out of range!\n");
@@ -577,12 +594,12 @@ void Fisher::throwRod() {
         throw "throw rod error: cannot find target fish within acceptable tries!";
       } else {
         printf("        find no target fish!\n");
-        if (logAllImgs) {
-          imgLog("targetFish", true);
-        }
+#ifdef DATA_COLLECT
+        imgLog("targetFish", true);
+#endif
         fishFailNum++;
         // random move to try to retrieve the fish
-        double ang = angDistrib(engine);
+        double ang = angDistrib(random_engine);
         mouseEvent(MOUSEEVENTF_MOVE, dx / 2, dy / 2);
         mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), 90 * sin(ang));
         continue;
@@ -615,7 +632,7 @@ void Fisher::throwRod() {
           throw "throw rod error: get rod state: Newton-Raphson method cannot converge within iteration limit!";
         } else {
           fishFailNum++;
-          double ang = angDistrib(engine);
+          double ang = angDistrib(random_engine);
           mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), -90 + 90 * sin(ang));
           break;
         }
@@ -786,19 +803,15 @@ void Fisher::control() {
     }
   }
 
-  // ----------------------------debug-----------------------------
-#ifndef RELEASE
-  if (logAllImgs) {
-    time_t logTime = time(0);
+#ifdef DATA_COLLECT
+  time_t logTime = time(0);
 
-    char filename[256];
-    sprintf(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
-            int(logTime), "match_controlbar", yBase);
+  char filename[256];
+  sprintf(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
+          int(logTime), "match_controlbar", yBase);
 
-    detached_imwrite(filename, resized(cv::Rect(504, 0, 16, 216)));
-  }
+  detached_imwrite(filename, resized(cv::Rect(504, 0, 16, 216)));
 #endif
-  // ----------------------------debug-----------------------------
 
   if (maxScore <= 2e5) {
     throw "control error: control box didn't appear!";
@@ -885,8 +898,7 @@ void Fisher::control() {
       matching_err = true;
     }
 
-    // ------------------------------ debug ------------------------------
-#ifndef RELEASE
+#ifdef DATA_COLLECT
     if (first) {
       lastLeftEdgePos = leftEdgePos;
       lastRightEdgePos = rightEdgePos;
@@ -903,15 +915,13 @@ void Fisher::control() {
           rightScore);
       std::cout << "warning: recognize control element matching error!"
                 << std::endl;
-      if (logAllImgs) {
-        char filename[256];
-        sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-                int(logTime), "control_matching", leftEdgePos, cursorPos,
-                rightEdgePos);
+      char filename[256];
+      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+              int(logTime), "control_matching", leftEdgePos, cursorPos,
+              rightEdgePos);
 
-        // save colorful controlbox
-        detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
-      }
+      // save colorful controlbox
+      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
     } else if ((leftEdgePos - lastLeftEdgePos) > 30 ||
                abs(rightEdgePos - lastRightEdgePos) > 30 ||
                abs(cursorPos - lastCursorPos) > 30) {
@@ -925,22 +935,19 @@ void Fisher::control() {
       std::cout << "warning: recognize control element discontinious movement!"
                 << std::endl;
 
-      if (logAllImgs) {
-        char filename[256];
-        sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-                int(logTime), "control_moving", leftEdgePos, cursorPos,
-                rightEdgePos);
+      char filename[256];
+      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+              int(logTime), "control_moving", leftEdgePos, cursorPos,
+              rightEdgePos);
 
-        // save colorful controlbox
-        detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
-      }
+      // save colorful controlbox
+      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
     }
 
     lastLeftEdgePos = leftEdgePos;
     lastRightEdgePos = rightEdgePos;
     lastCursorPos = cursorPos;
 #endif
-    // ------------------------------ debug ------------------------------
 
     checkWorking();
 
