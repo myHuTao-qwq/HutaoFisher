@@ -3,51 +3,81 @@ using cv::Mat;
 
 Screen::Screen() {
   // 获取原神窗口的句柄
-  HWND hWnd = FindHandleByWindowName();
-
-  // 获取游戏区域
-  RECT client_rect = { 0, 0, 0, 0 };
-  GetClientRect(hWnd, &client_rect);
-
-  m_width = client_rect.right - client_rect.left;
-  m_height = client_rect.bottom - client_rect.top;
-  m_screenshotData = new char[m_width * m_height * 4];
-  memset(m_screenshotData, 0, m_width);
-
-  // 获取句柄 DC // 建议下沉至 getScreenshot() 并 DeleteDC + ReleaseDC
-  m_screenDC = GetDC(hWnd);
-  m_compatibleDC = CreateCompatibleDC(m_screenDC);
-
-  // 创建位图
-  m_hBitmap = CreateCompatibleBitmap(m_screenDC, m_width, m_height);
-  SelectObject(m_compatibleDC, m_hBitmap);
+  HWND hWnd = FindHandle("YuanShen.exe");
+  this->gameHandle = hWnd;
 }
 
 /** 
  * 获取原神窗口的句柄
- * 此方法获取的句柄有概率造成原神 10258-4001 错误
  */
-HWND FindHandleByWindowName() {
-  HWND handle = FindWindowA("UnityWndClass", "原神");
-  if (handle != 0) {
-      return handle;
+HWND Screen::FindHandle(const std::string& processName) {
+  HANDLE hProcessSnap;
+  PROCESSENTRY32 pe32;
+  hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (hProcessSnap == INVALID_HANDLE_VALUE) {
+      std::cerr << "CreateToolhelp32Snapshot failed." << std::endl;
+      return NULL;
   }
-  
-  handle = FindWindowA("UnityWndClass", "Genshin Impact");
-  if (handle != 0) {
-      return handle;
+
+  pe32.dwSize = sizeof(PROCESSENTRY32);
+  if (!Process32First(hProcessSnap, &pe32)) {
+      CloseHandle(hProcessSnap);
+      std::cerr << "Process32First failed." << std::endl;
+      return NULL;
   }
-  
-  handle = FindWindowA("Qt5152QWindowIcon", "云·原神");
-  if (handle != 0) {
-      return handle;
-  }
-  
+
+  do {
+      if (processName == pe32.szExeFile) {
+          return GetHwndByPid(pe32.th32ProcessID);
+      }
+  } while (Process32Next(hProcessSnap, &pe32));
+
+  CloseHandle(hProcessSnap);
   return NULL;
+}
+
+// 根据进程ID获取窗口句柄
+HWND Screen::GetHwndByPid(DWORD processID) {
+    HWND hwnd = NULL;
+    hwnd = FindWindow(NULL, NULL);
+    while (hwnd) {
+        DWORD pid = 0;
+        GetWindowThreadProcessId(hwnd, &pid);
+        if (pid == processID) {
+            // 检查是否是主窗体
+            HWND parent = GetAncestor(hwnd, GA_ROOTOWNER);
+            if (parent == hwnd || parent == NULL) {
+                return hwnd;
+            }
+        }
+        hwnd = FindWindowEx(NULL, hwnd, NULL, NULL);
+    }
+    return NULL;
 }
 
 /* 获取整个屏幕的截图 */
 Mat Screen::getScreenshot() {
+  // 获取游戏区域
+  RECT client_rect;
+  GetClientRect(this->gameHandle, &client_rect);
+
+  m_width = client_rect.right - client_rect.left;
+  m_height = client_rect.bottom - client_rect.top;
+
+  if (m_width == 0 || m_height == 0) {
+      return Mat();
+  }
+
+  m_screenshotData = new char[m_width * m_height * 4];
+  memset(m_screenshotData, 0, m_width);
+ 
+  // 获取句柄 DC // 建议下沉至 getScreenshot() 并 DeleteDC + ReleaseDC
+  m_screenDC = GetDC(this->gameHandle);
+  m_compatibleDC = CreateCompatibleDC(m_screenDC);
+ 
+  // 创建位图
+  m_hBitmap = CreateCompatibleBitmap(m_screenDC, m_width, m_height);
+  SelectObject(m_compatibleDC, m_hBitmap);
   // 得到位图的数据
   BitBlt(m_compatibleDC, 0, 0, m_width, m_height, m_screenDC, 0, 0, SRCCOPY);
   GetBitmapBits(m_hBitmap, m_width * m_height * 4, m_screenshotData);
@@ -57,6 +87,12 @@ Mat Screen::getScreenshot() {
   // Mat screenshot(m_height, m_width, CV_8UC3);
   Mat screenshot;
   cv::cvtColor(origin, screenshot, cv::COLOR_BGRA2BGR);
+
+  // 释放资源
+  DeleteObject(m_hBitmap);
+  DeleteDC(m_compatibleDC);
+  ReleaseDC(this->gameHandle, m_screenDC);
+  delete[] m_screenshotData;
 
   return screenshot;
 }

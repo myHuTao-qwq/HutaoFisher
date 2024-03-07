@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <dwmapi.h>
 
 #include "json.hpp"
 using json = nlohmann::json;
@@ -89,6 +90,9 @@ class Fisher {
   void imgLog(char name[], bool bbox);
   void errLog();
 
+  void mouseEventPos(DWORD dWflags, double dx, double dy);
+  RECT GetCaptureRect(HWND hWnd);
+
  public:
   Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath, json config);
   ~Fisher();
@@ -102,3 +106,5 @@ class Fisher {
   void getRodData();
 #endif
 };
+
+double bboxDist(BoxInfo rod, BoxInfo fish1, BoxInfo fish2);
