@@ -1,10 +1,14 @@
 #include "screenshot.h"
+#include "shellscalingapi.h"
+
 using cv::Mat;
 
 Screen::Screen() {
   // 获取原神窗口的句柄
   HWND hWnd = FindHandle("YuanShen.exe");
   this->gameHandle = hWnd;
+  // dpi 感知
+  SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
 }
 
 /** 
@@ -57,6 +61,9 @@ HWND Screen::GetHwndByPid(DWORD processID) {
 
 /* 获取整个屏幕的截图 */
 Mat Screen::getScreenshot() {
+  if (this->gameHandle == NULL) {
+	  return Mat();
+  }
   // 获取游戏区域
   RECT client_rect;
   GetClientRect(this->gameHandle, &client_rect);

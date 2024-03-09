@@ -75,7 +75,7 @@ int screenWidth, screenHeight;
 void Fisher::mouseEventPos(DWORD dWflags, double dx, double dy) {
   Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
 
-  // 获取游戏捕获区域
+  // 鑾峰彇娓告垙鎹曡幏鍖哄煙
   RECT captureArea = GetCaptureRect(this->screen->gameHandle);
   double gameWidth = captureArea.right - captureArea.left;
   double gameHeight = captureArea.bottom - captureArea.top;
