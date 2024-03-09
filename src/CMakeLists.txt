@@ -55,5 +55,6 @@ target_link_libraries(
     fisher
     ncnn
     dwmapi
+    shcore
     ${OpenCV_LIBS}
 )
