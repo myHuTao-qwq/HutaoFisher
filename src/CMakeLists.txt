@@ -54,5 +54,7 @@ SET_TARGET_PROPERTIES(fisher PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requir
 target_link_libraries(
     fisher
     ncnn
+    dwmapi
+    shcore
     ${OpenCV_LIBS}
 )

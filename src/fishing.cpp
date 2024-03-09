@@ -70,6 +70,55 @@ inline void mouseEvent(DWORD dWflags, double dx, double dy) {
   return;
 }
 
+int screenWidth, screenHeight;
+
+void Fisher::mouseEventPos(DWORD dWflags, double dx, double dy) {
+  Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
+
+  // 获取游戏捕获区域
+  RECT captureArea = GetCaptureRect(this->screen->gameHandle);
+  double gameWidth = captureArea.right - captureArea.left;
+  double gameHeight = captureArea.bottom - captureArea.top;
+
+  mouse_event(dWflags, DWORD((dx * 1.0 / 65535 * gameWidth + captureArea.left)* 65535/ screenWidth),
+      DWORD((dy * 1.0 / 65535 * gameHeight + captureArea.top) * 65535 / screenHeight), 0, 0);
+  return;
+}
+
+inline void InitScreenArea()
+{
+  HDC hdc = GetDC(NULL);
+  screenWidth = GetDeviceCaps(hdc, HORZRES);
+  screenHeight = GetDeviceCaps(hdc, VERTRES);
+  ReleaseDC(NULL, hdc);
+}
+
+
+inline RECT GetWindowRect(HWND hWnd)
+{
+  RECT windowRect;
+  DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &windowRect, sizeof(RECT));
+  return windowRect;
+}
+
+inline RECT GetGameScreenRect(HWND hWnd)
+{
+  RECT clientRect;
+  GetClientRect(hWnd, &clientRect);
+  return clientRect;
+}
+
+RECT Fisher::GetCaptureRect(HWND hWnd)
+{
+    RECT windowRect = GetWindowRect(hWnd);
+    RECT gameScreenRect = GetGameScreenRect(hWnd);
+    long left = windowRect.left;
+    long top = windowRect.top + (windowRect.bottom - windowRect.top) - (gameScreenRect.bottom - gameScreenRect.top);
+    long right = left + gameScreenRect.right - gameScreenRect.left;
+    long bottom = top + gameScreenRect.bottom - gameScreenRect.top;
+    return { left, top, right, bottom };
+}
+
 double bboxDist(BoxInfo rod, BoxInfo fish1,
                 BoxInfo fish2) {  //"rectified" distance
   double ratio = (rod.x2 - rod.x1) / (rod.y2 - rod.y1);
@@ -155,6 +204,8 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
 
 Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
                json config) {
+  InitScreenArea();
+
   this->working = false;
   this->fishNet = fishnet;
   // this->rodNet = rodnet;
@@ -397,7 +448,7 @@ void Fisher::chooseBait() {
   mouseEvent(MOUSEEVENTF_RIGHTDOWN, 0, 0);
   mouseEvent(MOUSEEVENTF_RIGHTUP, 0, 0);
 
-  mouseEvent(
+  mouseEventPos(
       MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 23333,
       45965);  // move the mouse away from the baits to prevent
                // mismatching, 23333 45965 is the pos of the cancel button
@@ -424,29 +475,29 @@ void Fisher::chooseBait() {
 
   if (minScore > 2e6) {  // not found, 2e6 is an empirical threshold
     // click cancel button
-    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 23333, 45965);
-    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 23333, 45965);
+    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 23333, 45965);
+    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 23333, 45965);
     throw "choose bait error: cannot find a proper bait!";
   }
 
   // click the position of bait
   checkWorking();
-  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,
+  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,
              double(minIdx.x + 29) / double(processShape[0]) * 65535,
              double(minIdx.y + 29) / double(processShape[1]) * 65535);
-  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN,
+  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN,
              double(minIdx.x + 29) / double(processShape[0]) * 65535,
              double(minIdx.y + 29) / double(processShape[1]) * 65535);
-  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP,
+  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP,
              double(minIdx.x + 29) / double(processShape[0]) * 65535,
              double(minIdx.y + 29) / double(processShape[1]) * 65535);
 
   // click confirm button, 44543 45965 is its position
   checkWorking();
   Sleep(300);
-  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
-  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 44543, 45965);
-  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 44543, 45965);
+  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
+  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 44543, 45965);
+  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 44543, 45965);
 
   // check whether succeeed to exit (if click the previous selected bait it will
   // pop a mask so we need to click again)
@@ -459,9 +510,9 @@ void Fisher::chooseBait() {
 
   checkWorking();
   if (colorDiff(backgroundColor, screencolor) < 10) {
-    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
-    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 44543, 45965);
-    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 44543, 45965);
+    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
+    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 44543, 45965);
+    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 44543, 45965);
     // final check
     Sleep(300);
     cv::resize(screen->getScreenshot(), baitScreenshot,

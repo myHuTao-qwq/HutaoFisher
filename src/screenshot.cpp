@@ -1,39 +1,90 @@
 #include "screenshot.h"
+#include "shellscalingapi.h"
+
 using cv::Mat;
 
 Screen::Screen() {
-  // 获取窗口当前显示的监视器
-  HWND hWnd = GetDesktopWindow();
-  HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+  // 获取原神窗口的句柄
+  HWND hWnd = FindHandle("YuanShen.exe");
+  this->gameHandle = hWnd;
+  // dpi 感知
+  SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
+}
 
-  // 获取监视器逻辑宽度
-  MONITORINFOEX monitorInfo;
-  monitorInfo.cbSize = sizeof(monitorInfo);
-  GetMonitorInfo(hMonitor, &monitorInfo);
+/** 
+ * 获取原神窗口的句柄
+ */
+HWND Screen::FindHandle(const std::string& processName) {
+  HANDLE hProcessSnap;
+  PROCESSENTRY32 pe32;
+  hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (hProcessSnap == INVALID_HANDLE_VALUE) {
+      std::cerr << "CreateToolhelp32Snapshot failed." << std::endl;
+      return NULL;
+  }
 
-  // 获取监视器物理宽度
-  DEVMODE dm;
-  dm.dmSize = sizeof(dm);
-  dm.dmDriverExtra = 0;
-  EnumDisplaySettings(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, &dm);
-  int cxPhysical = dm.dmPelsWidth;
+  pe32.dwSize = sizeof(PROCESSENTRY32);
+  if (!Process32First(hProcessSnap, &pe32)) {
+      CloseHandle(hProcessSnap);
+      std::cerr << "Process32First failed." << std::endl;
+      return NULL;
+  }
 
-  m_width = dm.dmPelsWidth;
-  m_height = dm.dmPelsHeight;
-  m_screenshotData = new char[m_width * m_height * 4];
-  memset(m_screenshotData, 0, m_width);
+  do {
+      if (processName == pe32.szExeFile) {
+          return GetHwndByPid(pe32.th32ProcessID);
+      }
+  } while (Process32Next(hProcessSnap, &pe32));
 
-  // 获取屏幕 DC
-  m_screenDC = GetDC(NULL);
-  m_compatibleDC = CreateCompatibleDC(m_screenDC);
+  CloseHandle(hProcessSnap);
+  return NULL;
+}
 
-  // 创建位图
-  m_hBitmap = CreateCompatibleBitmap(m_screenDC, m_width, m_height);
-  SelectObject(m_compatibleDC, m_hBitmap);
+// 根据进程ID获取窗口句柄
+HWND Screen::GetHwndByPid(DWORD processID) {
+    HWND hwnd = NULL;
+    hwnd = FindWindow(NULL, NULL);
+    while (hwnd) {
+        DWORD pid = 0;
+        GetWindowThreadProcessId(hwnd, &pid);
+        if (pid == processID) {
+            // 检查是否是主窗体
+            HWND parent = GetAncestor(hwnd, GA_ROOTOWNER);
+            if (parent == hwnd || parent == NULL) {
+                return hwnd;
+            }
+        }
+        hwnd = FindWindowEx(NULL, hwnd, NULL, NULL);
+    }
+    return NULL;
 }
 
 /* 获取整个屏幕的截图 */
 Mat Screen::getScreenshot() {
+  if (this->gameHandle == NULL) {
+	  return Mat();
+  }
+  // 获取游戏区域
+  RECT client_rect;
+  GetClientRect(this->gameHandle, &client_rect);
+
+  m_width = client_rect.right - client_rect.left;
+  m_height = client_rect.bottom - client_rect.top;
+
+  if (m_width == 0 || m_height == 0) {
+      return Mat();
+  }
+
+  m_screenshotData = new char[m_width * m_height * 4];
+  memset(m_screenshotData, 0, m_width);
+ 
+  // 获取句柄 DC // 建议下沉至 getScreenshot() 并 DeleteDC + ReleaseDC
+  m_screenDC = GetDC(this->gameHandle);
+  m_compatibleDC = CreateCompatibleDC(m_screenDC);
+ 
+  // 创建位图
+  m_hBitmap = CreateCompatibleBitmap(m_screenDC, m_width, m_height);
+  SelectObject(m_compatibleDC, m_hBitmap);
   // 得到位图的数据
   BitBlt(m_compatibleDC, 0, 0, m_width, m_height, m_screenDC, 0, 0, SRCCOPY);
   GetBitmapBits(m_hBitmap, m_width * m_height * 4, m_screenshotData);
@@ -43,6 +94,12 @@ Mat Screen::getScreenshot() {
   // Mat screenshot(m_height, m_width, CV_8UC3);
   Mat screenshot;
   cv::cvtColor(origin, screenshot, cv::COLOR_BGRA2BGR);
+
+  // 释放资源
+  DeleteObject(m_hBitmap);
+  DeleteDC(m_compatibleDC);
+  ReleaseDC(this->gameHandle, m_screenDC);
+  delete[] m_screenshotData;
 
   return screenshot;
 }
