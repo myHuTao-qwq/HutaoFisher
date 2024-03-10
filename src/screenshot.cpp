@@ -1,5 +1,7 @@
 #include "screenshot.h"
 
+#include <iostream>
+
 #include "shellscalingapi.h"
 
 using cv::Mat;
