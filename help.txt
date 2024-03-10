@@ -12,7 +12,7 @@ Welcome to email your fising data (automatic screenshots and fishing success mes
 使用说明:
 先运行HutaoFisher.exe再运行游戏。
 可在config.json中设置是否使用GPU推理(useGPU)，是否记录全部图像(logAllImgs)（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定(logData)（此项若为是，则抛竿失败后响提示音时需Alt+Tab切出原神输入错误原因）, 以及是否钓某一大类的鱼(typeToFish)
-在全屏模式下运行游戏，并且显示器长宽比应为16:9（重要！）
+，并且游戏窗口长宽比应为16:9（重要！）
 在启动钓鱼器之前应手动走到钓鱼点，选择鱼竿并在游戏中进入钓鱼。
 按Alt+V进入钓鱼，Alt+X退出钓鱼。
 提示音依照音阶顺序依次为：
@@ -81,7 +81,7 @@ config.json为键值对组成的json文件. 如果你知道json的格式那应�
 Instruction:
 Run HutaoFisher.exe first and then run the game.
 You can set in config.json whether to useGPU inference (useGPU), whether to log all images (logAllImgs) (images in case of error will always be output, but other image logging can be turned off), whether to log casting data to help optimize casting decision (logData) (If yes, when the prompt tone is played after the rod casting fails, you need to press Alt+Tab to enter the failure reason), and whether to catch a certain type of fish (typeToFish)
-Run the game in full screen mode, and the monitor aspect ratio should be 16:9 (important!)
+The game window aspect ratio should be 16:9 (important!)
 Before starting the angler you should manually walk to the fishing spot, select the fishing rod and enter fishing in the game.
 Press Alt+V to enter fishing, Alt+X to exit fishing.
 The cues are in order according to the scale.
