@@ -80,43 +80,44 @@ void Fisher::mouseEventPos(DWORD dWflags, double dx, double dy) {
   double gameWidth = captureArea.right - captureArea.left;
   double gameHeight = captureArea.bottom - captureArea.top;
 
-  mouse_event(dWflags, DWORD((dx * 1.0 / 65535 * gameWidth + captureArea.left)* 65535/ screenWidth),
-      DWORD((dy * 1.0 / 65535 * gameHeight + captureArea.top) * 65535 / screenHeight), 0, 0);
+  mouse_event(dWflags,
+              DWORD((dx * 1.0 / 65535 * gameWidth + captureArea.left) * 65535 /
+                    screenWidth),
+              DWORD((dy * 1.0 / 65535 * gameHeight + captureArea.top) * 65535 /
+                    screenHeight),
+              0, 0);
   return;
 }
 
-inline void InitScreenArea()
-{
+inline void InitScreenArea() {
   HDC hdc = GetDC(NULL);
   screenWidth = GetDeviceCaps(hdc, HORZRES);
   screenHeight = GetDeviceCaps(hdc, VERTRES);
   ReleaseDC(NULL, hdc);
 }
 
-
-inline RECT GetWindowRect(HWND hWnd)
-{
+inline RECT GetWindowRect(HWND hWnd) {
   RECT windowRect;
-  DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &windowRect, sizeof(RECT));
+  DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &windowRect,
+                        sizeof(RECT));
   return windowRect;
 }
 
-inline RECT GetGameScreenRect(HWND hWnd)
-{
+inline RECT GetGameScreenRect(HWND hWnd) {
   RECT clientRect;
   GetClientRect(hWnd, &clientRect);
   return clientRect;
 }
 
-RECT Fisher::GetCaptureRect(HWND hWnd)
-{
-    RECT windowRect = GetWindowRect(hWnd);
-    RECT gameScreenRect = GetGameScreenRect(hWnd);
-    long left = windowRect.left;
-    long top = windowRect.top + (windowRect.bottom - windowRect.top) - (gameScreenRect.bottom - gameScreenRect.top);
-    long right = left + gameScreenRect.right - gameScreenRect.left;
-    long bottom = top + gameScreenRect.bottom - gameScreenRect.top;
-    return { left, top, right, bottom };
+RECT Fisher::GetCaptureRect(HWND hWnd) {
+  RECT windowRect = GetWindowRect(hWnd);
+  RECT gameScreenRect = GetGameScreenRect(hWnd);
+  long left = windowRect.left;
+  long top = windowRect.top + (windowRect.bottom - windowRect.top) -
+             (gameScreenRect.bottom - gameScreenRect.top);
+  long right = left + gameScreenRect.right - gameScreenRect.left;
+  long bottom = top + gameScreenRect.bottom - gameScreenRect.top;
+  return {left, top, right, bottom};
 }
 
 double bboxDist(BoxInfo rod, BoxInfo fish1,
@@ -202,6 +203,13 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
   return image;
 }
 
+class fishingException : public std::exception {
+ public:
+  using std::exception::exception;
+};
+
+class fisherShutdown {};
+
 Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
                json config) {
   InitScreenArea();
@@ -273,7 +281,7 @@ Fisher::~Fisher() { return; }
 
 inline void Fisher::checkWorking() {
   if (!working) {
-    throw false;
+    throw fisherShutdown();
   }
   return;
 }
@@ -321,13 +329,13 @@ void Fisher::getBBoxes(bool cover) {
     }
   }
 
-// #ifdef DATA_COLLECT
-//   // 1/50 probility to randomly record image
-//   std::uniform_int_distribution<int> intDist(1, 1);
-//   if (intDist(random_engine) == 1) {
-//     imgLog("random", true);
-//   }
-// #endif
+  // #ifdef DATA_COLLECT
+  //   // 1/50 probility to randomly record image
+  //   std::uniform_int_distribution<int> intDist(1, 1);
+  //   if (intDist(random_engine) == 1) {
+  //     imgLog("random", true);
+  //   }
+  // #endif
 
   checkWorking();
   return;
@@ -385,7 +393,7 @@ void Fisher::selectFish() {
   Beep(E4, 250);
   checkWorking();
   if (bboxes.empty()) {  // only can be triggered in test
-    throw "select fish error: there is no fish in screen!";
+    throw fishingException("select fish error: there is no fish in screen!");
     // return;
   }
   // std::sort(bboxes.begin(), bboxes.end(), [](BoxInfo bbox1, BoxInfo bbox2) {
@@ -396,10 +404,12 @@ void Fisher::selectFish() {
   });  // sort the bboxes with confidence
   if (bboxes[0].label == 0) {
     cancelThrowRod(false);
-    throw "select fish error: there should be no rod in screen!";
+    throw fishingException(
+        "select fish error: there should be no rod in screen!");
   } else if (bboxes[0].label == 1) {
     cancelThrowRod(true);
-    throw "select fish error: there should be no err_rod in screen!";
+    throw fishingException(
+        "select fish error: there should be no err_rod in screen!");
   }
   targetFish = bboxes[0];
 #ifdef DATA_COLLECT
@@ -496,20 +506,20 @@ void Fisher::chooseBait() {
     // click cancel button
     mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 23333, 45965);
     mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 23333, 45965);
-    throw "choose bait error: cannot find a proper bait!";
+    throw fishingException("choose bait error: cannot find a proper bait!");
   }
 
   // click the position of bait
   checkWorking();
   mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,
-             double(minIdx.x + 29) / double(processShape[0]) * 65535,
-             double(minIdx.y + 29) / double(processShape[1]) * 65535);
+                double(minIdx.x + 29) / double(processShape[0]) * 65535,
+                double(minIdx.y + 29) / double(processShape[1]) * 65535);
   mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN,
-             double(minIdx.x + 29) / double(processShape[0]) * 65535,
-             double(minIdx.y + 29) / double(processShape[1]) * 65535);
+                double(minIdx.x + 29) / double(processShape[0]) * 65535,
+                double(minIdx.y + 29) / double(processShape[1]) * 65535);
   mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP,
-             double(minIdx.x + 29) / double(processShape[0]) * 65535,
-             double(minIdx.y + 29) / double(processShape[1]) * 65535);
+                double(minIdx.x + 29) / double(processShape[0]) * 65535,
+                double(minIdx.y + 29) / double(processShape[1]) * 65535);
 
   // click confirm button, 44543 45965 is its position
   checkWorking();
@@ -538,7 +548,7 @@ void Fisher::chooseBait() {
                cv::Size(processShape[0], processShape[1]));
     screencolor = baitScreenshot.at<cv::Vec3b>(cv::Point(700, 268));
     if (colorDiff(backgroundColor, screencolor) < 10) {
-      throw "choose bait error: cannot exit the select window!";
+      fishingException("choose bait error: cannot exit the select window!");
     }
   }
 
@@ -597,11 +607,12 @@ void Fisher::throwRod() {
         if (err_rods.empty()) {
           cancelThrowRod(false);
           printf("\n");
-          throw "throw rod error: find no rod!";
+          throw fishingException("throw rod error: find no rod!");
         } else if (fishes.empty()) {
           cancelThrowRod(true);
           printf("\n");
-          throw "throw rod error: rod position is unacceptably wrong!";
+          throw fishingException(
+              "throw rod error: rod position is unacceptably wrong!");
         }
       } else {
         if (err_rods.empty() || fishes.empty()) {
@@ -642,7 +653,9 @@ void Fisher::throwRod() {
       if (fishFailNum == MaxThrowFailNum) {
         cancelThrowRod(false);
         printf("\n");
-        throw "throw rod error: cannot find target fish within acceptable tries!";
+        throw fishingException(
+            "throw rod error: cannot find target fish within acceptable "
+            "tries!");
       } else {
         printf("        find no target fish!\n");
 #ifdef DATA_COLLECT
@@ -680,7 +693,9 @@ void Fisher::throwRod() {
         if (fishFailNum == MaxThrowFailNum) {
           cancelThrowRod(false);
           printf("\n");
-          throw "throw rod error: get rod state: Newton-Raphson method cannot converge within iteration limit!";
+          throw fishingException(
+              "throw rod error: Newton-Raphson method cannot converge within "
+              "iteration limit!");
         } else {
           fishFailNum++;
           double ang = angDistrib(random_engine);
@@ -710,7 +725,9 @@ void Fisher::throwRod() {
     }
   }
   cancelThrowRod(false);
-  throw "throw rod error: cannot reach a proper position within iteration limit!";
+  throw fishingException(
+      "throw rod error: cannot reach a proper position within iteration "
+      "limit!");
   return;
 }
 
@@ -745,7 +762,8 @@ void Fisher::checkBite() {
     startTime = clock();
   } else {
     screenImage = screen->getScreenshot();
-    throw "checkBite: the float doesn't splash within acceptable time!";
+    throw fishingException(
+        "checkBite: the float doesn't splash within acceptable time!");
   }
 
   double biteTime = 0;
@@ -824,7 +842,8 @@ void Fisher::checkBite() {
     printf("    checkBite: the fish gets hooked after %lf seconds!\n",
            biteTime);
   } else {
-    throw "checkBite: the fish didn't get hooked within an acceptable time!";
+    throw fishingException(
+        "checkBite: the fish didn't get hooked within an acceptable time!");
   }
   return;
 }
@@ -865,7 +884,7 @@ void Fisher::control() {
 #endif
 
   if (maxScore <= 2e5) {
-    throw "control error: control box didn't appear!";
+    throw fishingException("control error: control box didn't appear!");
   }
 
   int cursorPos, leftEdgePos, rightEdgePos;
@@ -915,7 +934,7 @@ void Fisher::control() {
 
           // save colorful controlbox
           detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
-          throw "control error: control fail!";
+          throw fishingException("control error: control fail!");
         }
         mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
         break;
@@ -1097,10 +1116,10 @@ void Fisher::fishing() {
           /* wait for the icon of last caught fish to disappear, otherwise it
         will disturb the fish recognition in this fishing cycle */
           Sleep(1500);
-        } catch (const char *msg) {
+        } catch (const fishingException &e) {
           fishingFailCnt++;
           bait = -1;
-          std::cerr << "    Error occured while fishing: " << msg << '\n';
+          std::cerr << "    Error occured while fishing: " << e.what() << '\n';
           errLog();
         }
       }
@@ -1122,10 +1141,9 @@ void Fisher::fishing() {
         }
         working = false;
       }
-    } catch (const bool) {
+    } catch (const fisherShutdown) {
       bait = -1;
-      std::cerr << "    Error occured while fishing: fishing process was "
-                   "manually aborted!\n";
+      std::cerr << "    Fisher: fishing process was manually aborted!\n";
       continue;
     }
   }

@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <dwmapi.h>
 
 #include <algorithm>
 #include <cmath>
@@ -6,7 +7,6 @@
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <dwmapi.h>
 
 #include "json.hpp"
 using json = nlohmann::json;
