@@ -1103,6 +1103,8 @@ void Fisher::fishing() {
       while (!working) {
         Sleep(100);  // wait for fisher launch
       }
+      screen->init();
+      ratio = double(screen->m_width) / double(processShape[0]);
       while (working && (fishingFailCnt < MaxFailNum) && scanFish()) {
         printf("Fisher: Begin to try to catch a fish!\n");
         try {
@@ -1127,7 +1129,8 @@ void Fisher::fishing() {
         if (fishingFailCnt >= MaxFailNum) {
           Sleep(250);
           printf(
-              "Fisher: Warning! fisher failed too many times. Please check.\n");
+              "Fisher: Warning! Fisher failed too many times and has "
+              "automatically stopped. Please check.\n");
           Beep(A3, 250);
           Beep(A3, 250);
           Beep(A3, 250);
@@ -1141,9 +1144,18 @@ void Fisher::fishing() {
         }
         working = false;
       }
+    } catch (const screenshotException &e) {
+      Sleep(250);
+      bait = -1;
+      std::cerr << "    Fisher: Fatal screenshot error: " << e.what()
+                << " The fisher has automatically stopped.\n";
+      working = false;
+      Beep(A3, 250);
+      Beep(A3, 250);
+      Beep(A3, 250);
     } catch (const fisherShutdown) {
       bait = -1;
-      std::cerr << "    Fisher: fishing process was manually aborted!\n";
+      std::cerr << "    Fisher: Fishing process was manually aborted!\n";
       continue;
     }
   }

@@ -4,7 +4,10 @@
 
 using cv::Mat;
 
-Screen::Screen() {
+Screen::Screen() { this->init(); }
+
+void Screen::init() {
+  working = true;
   // 获取原神窗口的句柄
   HWND hWnd = FindHandle("YuanShen.exe");
   this->gameHandle = hWnd;
@@ -20,14 +23,15 @@ HWND Screen::FindHandle(const std::string& processName) {
   PROCESSENTRY32 pe32;
   hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (hProcessSnap == INVALID_HANDLE_VALUE) {
-    std::cerr << "CreateToolhelp32Snapshot failed." << std::endl;
+    std::cerr << "Screenshot warning: CreateToolhelp32Snapshot failed."
+              << std::endl;
     return NULL;
   }
 
   pe32.dwSize = sizeof(PROCESSENTRY32);
   if (!Process32First(hProcessSnap, &pe32)) {
     CloseHandle(hProcessSnap);
-    std::cerr << "Process32First failed." << std::endl;
+    std::cerr << "Screenshot warning: Process32First failed." << std::endl;
     return NULL;
   }
 
@@ -63,7 +67,8 @@ HWND Screen::GetHwndByPid(DWORD processID) {
 /* 获取整个屏幕的截图 */
 Mat Screen::getScreenshot() {
   if (this->gameHandle == NULL) {
-    return Mat();
+    working = false;
+    throw screenshotException("the game handle is NULL!");
   }
   // 获取游戏区域
   RECT client_rect;
@@ -73,7 +78,14 @@ Mat Screen::getScreenshot() {
   m_height = client_rect.bottom - client_rect.top;
 
   if (m_width == 0 || m_height == 0) {
-    return Mat();
+    working = false;
+    throw screenshotException("the screenshot is empty!");
+  }
+
+  if (m_width / 16 != m_height / 9) {
+    working = false;
+    throw screenshotException(
+        "the aspect ratio of the game window is not 16:9!");
   }
 
   m_screenshotData = new char[m_width * m_height * 4];
