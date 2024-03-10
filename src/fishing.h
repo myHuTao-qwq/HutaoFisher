@@ -71,6 +71,8 @@ class Fisher {
 
   int bait;  //-1: undetermined bait
 
+  std::mt19937 random_engine;
+
   cv::Mat screenImage;
   std::vector<BoxInfo> bboxes;
   BoxInfo targetFish;

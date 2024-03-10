@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 project(fisher VERSION 4.4.1)
 
 option(RELEASE "change directories" OFF)
+option(DATA_COLLECT "specialize for collecting data" OFF)
 
 if(NOT RELEASE)
     set(OpenCV_DIR "../../opencv/build") # collecting data needs cv::imshow
