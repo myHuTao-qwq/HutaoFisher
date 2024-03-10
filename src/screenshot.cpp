@@ -1,4 +1,5 @@
 #include "screenshot.h"
+
 #include "shellscalingapi.h"
 
 using cv::Mat;
@@ -8,10 +9,10 @@ Screen::Screen() {
   HWND hWnd = FindHandle("YuanShen.exe");
   this->gameHandle = hWnd;
   // dpi 感知
-  SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
+  SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 }
 
-/** 
+/**
  * 获取原神窗口的句柄
  */
 HWND Screen::FindHandle(const std::string& processName) {
@@ -19,21 +20,21 @@ HWND Screen::FindHandle(const std::string& processName) {
   PROCESSENTRY32 pe32;
   hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (hProcessSnap == INVALID_HANDLE_VALUE) {
-      std::cerr << "CreateToolhelp32Snapshot failed." << std::endl;
-      return NULL;
+    std::cerr << "CreateToolhelp32Snapshot failed." << std::endl;
+    return NULL;
   }
 
   pe32.dwSize = sizeof(PROCESSENTRY32);
   if (!Process32First(hProcessSnap, &pe32)) {
-      CloseHandle(hProcessSnap);
-      std::cerr << "Process32First failed." << std::endl;
-      return NULL;
+    CloseHandle(hProcessSnap);
+    std::cerr << "Process32First failed." << std::endl;
+    return NULL;
   }
 
   do {
-      if (processName == pe32.szExeFile) {
-          return GetHwndByPid(pe32.th32ProcessID);
-      }
+    if (processName == pe32.szExeFile) {
+      return GetHwndByPid(pe32.th32ProcessID);
+    }
   } while (Process32Next(hProcessSnap, &pe32));
 
   CloseHandle(hProcessSnap);
@@ -42,27 +43,27 @@ HWND Screen::FindHandle(const std::string& processName) {
 
 // 根据进程ID获取窗口句柄
 HWND Screen::GetHwndByPid(DWORD processID) {
-    HWND hwnd = NULL;
-    hwnd = FindWindow(NULL, NULL);
-    while (hwnd) {
-        DWORD pid = 0;
-        GetWindowThreadProcessId(hwnd, &pid);
-        if (pid == processID) {
-            // 检查是否是主窗体
-            HWND parent = GetAncestor(hwnd, GA_ROOTOWNER);
-            if (parent == hwnd || parent == NULL) {
-                return hwnd;
-            }
-        }
-        hwnd = FindWindowEx(NULL, hwnd, NULL, NULL);
+  HWND hwnd = NULL;
+  hwnd = FindWindow(NULL, NULL);
+  while (hwnd) {
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (pid == processID) {
+      // 检查是否是主窗体
+      HWND parent = GetAncestor(hwnd, GA_ROOTOWNER);
+      if (parent == hwnd || parent == NULL) {
+        return hwnd;
+      }
     }
-    return NULL;
+    hwnd = FindWindowEx(NULL, hwnd, NULL, NULL);
+  }
+  return NULL;
 }
 
 /* 获取整个屏幕的截图 */
 Mat Screen::getScreenshot() {
   if (this->gameHandle == NULL) {
-	  return Mat();
+    return Mat();
   }
   // 获取游戏区域
   RECT client_rect;
@@ -72,16 +73,16 @@ Mat Screen::getScreenshot() {
   m_height = client_rect.bottom - client_rect.top;
 
   if (m_width == 0 || m_height == 0) {
-      return Mat();
+    return Mat();
   }
 
   m_screenshotData = new char[m_width * m_height * 4];
   memset(m_screenshotData, 0, m_width);
- 
+
   // 获取句柄 DC // 建议下沉至 getScreenshot() 并 DeleteDC + ReleaseDC
   m_screenDC = GetDC(this->gameHandle);
   m_compatibleDC = CreateCompatibleDC(m_screenDC);
- 
+
   // 创建位图
   m_hBitmap = CreateCompatibleBitmap(m_screenDC, m_width, m_height);
   SelectObject(m_compatibleDC, m_hBitmap);
