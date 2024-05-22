@@ -36,6 +36,5 @@
         "heartfeather_bass": 8.5,
         "maintenance_mek": 8
     },
-    "MaxControlWaiting": 3,
-    "DebugPromptForFailedBite": false
+    "MaxControlWaiting": 3
 }
