@@ -271,6 +271,7 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
         config["MaxBiteWaiting"][typeNames[NON_FISH_CLASS_NUM + i]];
   }
   MaxControlWaiting = config["MaxControlWaiting"];
+  DebugPromptForFailedBite = config["DebugPromptForFailedBite"];
 
   bait = -1;
 
@@ -802,11 +803,16 @@ void Fisher::checkBite() {
       if (biteSuccess) {
         biteState = 0;
       } else {
-        Beep(C4, 250);
-        printf(
-            "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
-            "save\n");
-        std::cin >> biteState;
+        if(DebugPromptForFailedBite) {
+          Beep(C4, 250);
+          printf(
+              "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
+              "save\n");
+          std::cin >> biteState;
+        } else {
+          throw fishingException(
+              "checkBite: the fish didn't get hooked within an acceptable time!");
+        }
       }
       if (biteState == 0 || biteState == 1 || biteState == 2) {
         int logTime = int(time(0));

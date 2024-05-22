@@ -54,6 +54,7 @@ class Fisher {
                                            11.5, 11.5, 10.5, 9.5,  8.5,
                                            10,   10};  // index is fish label
   double MaxControlWaiting = 3;
+  bool DebugPromptForFailedBite = false;
 
   bool typeToFish[FISH_CLASS_NUM];
   bool logAllImgs;
