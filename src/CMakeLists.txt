@@ -46,6 +46,7 @@ set(
     nanodet.cpp
     rodnet.cpp
     screenshot.cpp
+    writer.cpp
 )
 
 add_executable(fisher ${FISHER_SRCS})

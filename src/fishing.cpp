@@ -58,11 +58,6 @@ const int progressRingPx[][2] = {{15, 3},
                                  {8, 4},
                                  {12, 3}};
 
-void detached_imwrite(char *filename, cv::Mat img) {
-  std::thread writer([filename, img]() { cv::imwrite(filename, img); });
-  writer.detach();
-  return;
-}
 
 inline void mouseEvent(DWORD dWflags, double dx, double dy) {
   Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
@@ -220,6 +215,8 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   this->screen = screen;
   this->ratio = double(screen->m_width) / double(processShape[0]);
 
+  Writer writer;
+
   std::random_device seed;
   random_engine = std::mt19937(seed());
 
@@ -254,7 +251,9 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
     if (!data.good()) {
       std::cout << "log file does not exist -- create log file." << std::endl;
       data.open(logPath + "\\data.csv", std::ios::out);
-      data << "filename,bite_time,fish_label,success" << std::endl;
+      data << "timestamp,bite_time,fish_label,success,fish_x1,fish_x2,fish_y1,"
+              "fish_y2,rod_x1,rod_x2,rod_y1,rod_y2"
+           << std::endl;
     }
     data.close();
   }
@@ -689,19 +688,6 @@ void Fisher::throwRod() {
     checkWorking();
 
     switch (getRodState(rod, targetFish)) {
-      case -1:
-        if (fishFailNum == MaxThrowFailNum) {
-          cancelThrowRod(false);
-          printf("\n");
-          throw fishingException(
-              "throw rod error: Newton-Raphson method cannot converge within "
-              "iteration limit!");
-        } else {
-          fishFailNum++;
-          double ang = angDistrib(random_engine);
-          mouseEvent(MOUSEEVENTF_MOVE, 160 * cos(ang), -90 + 90 * sin(ang));
-          break;
-        }
       case 0:  // the rod is at a proper position
         printf(
             "\n    throw rod: the rod move to a proper position after %d "
@@ -814,8 +800,10 @@ void Fisher::checkBite() {
         std::ofstream data;
         data.open(logPath + "\\data.csv", std::ios::app);
         char output[1024];
-        sprintf(output, "%d_bite.png, %f, %d, %d", logTime, biteTime,
-                targetFish.label - 2, biteState);
+        sprintf(output, "%d, %f, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f",
+                logTime, biteTime, targetFish.label - 2, biteState,
+                targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
+                rod.x1, rod.x2, rod.y1, rod.y2);
         data << output << std::endl;
         data.close();
 
@@ -830,9 +818,11 @@ void Fisher::checkBite() {
             .copyTo(roiImage(bbox2ROI(targetFish, processShape)));
 
         char filename[256];
-        sprintf(filename, "%s/images/%d_bite.png", logPath.c_str(), logTime);
+        sprintf(filename, "%s\\images\\%d_bite.png", logPath.c_str(), logTime);
 
-        detached_imwrite(filename, roiImage);
+        writer.addImage(filename, roiImage);
+
+        imgLog("bite", true, logTime);
       }
     }
   }
@@ -880,7 +870,7 @@ void Fisher::control() {
   sprintf(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
           int(logTime), "match_controlbar", yBase);
 
-  detached_imwrite(filename, resized(cv::Rect(504, 0, 16, 216)));
+  writer.addImage(filename, resized(cv::Rect(504, 0, 16, 216)));
 #endif
 
   if (maxScore <= 2e5) {
@@ -933,7 +923,7 @@ void Fisher::control() {
                   rightEdgePos);
 
           // save colorful controlbox
-          detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+          writer.addImage(filename, resized(cv::Rect(375, yBase, 273, 16)));
           throw fishingException("control error: control fail!");
         }
         mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
@@ -991,7 +981,7 @@ void Fisher::control() {
               rightEdgePos);
 
       // save colorful controlbox
-      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+      writer.addImage(filename, resized(cv::Rect(375, yBase, 273, 16)));
     } else if ((leftEdgePos - lastLeftEdgePos) > 30 ||
                abs(rightEdgePos - lastRightEdgePos) > 30 ||
                abs(cursorPos - lastCursorPos) > 30) {
@@ -1011,7 +1001,7 @@ void Fisher::control() {
               rightEdgePos);
 
       // save colorful controlbox
-      detached_imwrite(filename, resized(cv::Rect(375, yBase, 273, 16)));
+      writer.addImage(filename, resized(cv::Rect(375, yBase, 273, 16)));
     }
 
     lastLeftEdgePos = leftEdgePos;
@@ -1055,8 +1045,10 @@ void Fisher::control() {
   return;
 }
 
-void Fisher::imgLog(char name[], bool bbox) {
-  time_t logTime = time(0);
+void Fisher::imgLog(char name[], bool bbox, int logTime) {
+  if (logTime == NULL) {
+    logTime = int(time(0));
+  }
 
   cv::rectangle(  // cover uid for privacy
       screenImage,
@@ -1065,9 +1057,9 @@ void Fisher::imgLog(char name[], bool bbox) {
       cv::Scalar(255, 255, 255), -1);
 
   char filename[256];
-  sprintf(filename, "%s/images/%d_%s_orig.png", logPath.c_str(), int(logTime),
+  sprintf(filename, "%s\\images\\%d_%s_orig.png", logPath.c_str(), logTime,
           name);
-  detached_imwrite(filename, screenImage);
+  writer.addImage(filename, screenImage);
 
   if (bbox) {
     object_rect effect_roi;
@@ -1080,9 +1072,9 @@ void Fisher::imgLog(char name[], bool bbox) {
     cv::putText(bboxed_img, "target: " + typeNames[targetFish.label],
                 cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
                 cv::Scalar(0, 0, 255), int(3 * ratio));
-    sprintf(bbox_filename, "%s/images/%d_%s_bbox.jpg", logPath.c_str(),
-            int(logTime), name);
-    detached_imwrite(bbox_filename, bboxed_img);
+    sprintf(bbox_filename, "%s\\images\\%d_%s_bbox.jpg", logPath.c_str(),
+            logTime, name);
+    writer.addImage(bbox_filename, bboxed_img);
   }
 
   return;

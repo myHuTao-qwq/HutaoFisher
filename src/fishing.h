@@ -15,6 +15,7 @@ using json = nlohmann::json;
 #include "nanodet.h"
 #include "rodnet.h"
 #include "screenshot.h"
+#include "writer.h"
 
 // music notes! qwq
 #define A3 220
@@ -72,6 +73,7 @@ class Fisher {
   int bait;  //-1: undetermined bait
 
   std::mt19937 random_engine;
+  Writer writer;
 
   cv::Mat screenImage;
   std::vector<BoxInfo> bboxes;
@@ -89,7 +91,7 @@ class Fisher {
   void control();
   int getRodState(BoxInfo rod, BoxInfo fish);
 
-  void imgLog(char name[], bool bbox);
+  void imgLog(char name[], bool bbox, int logTime = NULL);
   void errLog();
 
   void mouseEventPos(DWORD dWflags, double dx, double dy);
