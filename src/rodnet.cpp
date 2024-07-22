@@ -24,8 +24,12 @@ const double
     B[3] = {1.241950004386, 3.051113640564,
             -3.848898190087};  // fitted parameters
 
+#ifdef DATA_COLLECT
+const double offset[FISH_CLASS_NUM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#else
 const double offset[FISH_CLASS_NUM] = {0.4, 0.2,  0.4, 0,   0.3, 0.3,
                                        0.3, 0.15, 0.5, 0.5, 0.5, 0.5};
+#endif
 
 // dst = {a,b,v}
 void f(double* dst, double* x, double* y) {

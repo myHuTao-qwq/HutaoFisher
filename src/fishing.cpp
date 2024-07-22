@@ -343,9 +343,9 @@ void Fisher::getBBoxes(bool cover) {
 
 int Fisher::getRodState(BoxInfo rod, BoxInfo fish) {
 #ifdef DATA_COLLECT
-  // 1/3 probility to make the fisher beleive the rod is in proper position,
+  // 1/2 probility to make the fisher beleive the rod is in proper position,
   // ignoring whether it's a real proper position
-  std::uniform_int_distribution<int> intDist(0, 2);
+  std::uniform_int_distribution<int> intDist(0, 1);
   if (intDist(random_engine) == 0) {
     return 0;
   }
