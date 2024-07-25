@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1...3.5)
 set(CMAKE_CXX_STANDARD 17)
 
-project(fisher VERSION 4.8.0)
+project(fisher VERSION 4.8.1)
 
 option(RELEASE "change directories" OFF)
 option(DATA_COLLECT "specialize for collecting data" OFF)
@@ -10,15 +10,13 @@ if(NOT RELEASE)
     set(OpenCV_DIR "../../opencv/build") # collecting data needs cv::imshow
     option(TEST "collect rod data" OFF)
 else()
+    set(OpenCV_STATIC ON) # this option doesn't work with a pre-build opencv (not mobile)
     set(OpenCV_DIR "../../opencv-mobile/x64")
 endif()
-
 
 set(ncnn_INSTALL_DIR "../../ncnn/x64")
 set(ncnn_DIR "${ncnn_INSTALL_DIR}/lib/cmake/ncnn")
 set(ncnn_INCLUDE_DIR "${ncnn_INSTALL_DIR}/include")
-
-set(OpenCV_STATIC ON) # warning: this option doesn't work with a pre-build opencv (not mobile)
 
 find_package(OpenCV REQUIRED)
 
@@ -43,7 +41,7 @@ set(
 
     main.cpp
     fishing.cpp
-    nanodet.cpp
+    yolov8.cpp
     rodnet.cpp
     screenshot.cpp
     writer.cpp

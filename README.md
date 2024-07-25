@@ -6,6 +6,14 @@
 
 ## 功能更新 Functional Update
 
+#### 2024/7/25
+
+- 把模型换成yolov8n, 以少许降低CPU推理性能为代价大幅提升mAP
+- 更新了ncnn与opencv-mobile以及编译器的版本
+- 用直接计算替代了牛顿法迭代, 提高了咬钩计算的稳定性
+
+
+
 #### 2024/3/10
 
 - 支持窗口化原神
@@ -81,7 +89,7 @@
 - 重构抛竿判定：将其抽象为一三分类器（过近，过远，刚好）。并且在判定抛竿的部分通过一定的近似消除摄像机高度的影响。
 - 删除了强化学习力度控制（因为我不会）
 - 加入了对渊下宫鳐鱼的支持
-- 将识别网络替换为[nanodet](https://github.com/RangiLyu/nanodet)，使用[ncnn](https://github.com/Tencent/ncnn)进行推理，并进一步调试，并在自己的钓鱼数据集上达到了0.668的mAP
+- 将识别网络替换为~~[nanodet](https://github.com/RangiLyu/nanodet)~~(现在是[yolov8n](https://github.com/ultralytics/ultralytics)了)，使用[ncnn](https://github.com/Tencent/ncnn)进行推理，并进一步调试，并在自己的钓鱼数据集上达到了0.891的mAP
 - 优化了一些错误情况的处理，使整体鲁棒性加强
 - 实现多分辨率适配。（通过将截屏缩放到一1024\*576的中间层进行处理，因此原则上分辨率高于1024\*576即可正常运行）
 

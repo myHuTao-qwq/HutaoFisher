@@ -12,7 +12,7 @@
 using json = nlohmann::json;
 
 #include "config.h"
-#include "nanodet.h"
+#include "yolov8.h"
 #include "rodnet.h"
 #include "screenshot.h"
 #include "writer.h"
@@ -64,10 +64,9 @@ class Fisher {
       leftEdgeMask, rightEdgeMask;
   cv::Mat baitImgs[BAIT_CLASS_NUM];
 
-  NanoDet *fishNet;
+  YOLOV8 *fishNet;
   //   RodNet *rodNet;
   Screen *screen;
-  double ratio;           // the ratio between user's screen and process layer
   float fishnetRatio[2];  // the ratio between process and fishnet's input size
 
   int bait;  //-1: undetermined bait
@@ -98,7 +97,7 @@ class Fisher {
   RECT GetCaptureRect(HWND hWnd);
 
  public:
-  Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath, json config);
+  Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath, json config);
   ~Fisher();
 
   bool working;

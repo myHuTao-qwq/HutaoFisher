@@ -1,9 +1,9 @@
 #include "fishing.h"
 
-const BoxInfo refBBox = {float(NanoDet_InputSize[1]) / 2 - 16,
-                         float(NanoDet_InputSize[0]) / 2 - 9,
-                         float(NanoDet_InputSize[1]) / 2 + 16,
-                         float(NanoDet_InputSize[0]) / 2 + 9,
+const BoxInfo refBBox = {float(InputSize[1]) / 2 - 16,
+                         float(InputSize[0]) / 2 - 9,
+                         float(InputSize[1]) / 2 + 16,
+                         float(InputSize[0]) / 2 + 9,
                          1,
                          0};  // represent the center of image
 
@@ -57,7 +57,6 @@ const int progressRingPx[][2] = {{15, 3},
                                  {5, 6},
                                  {8, 4},
                                  {12, 3}};
-
 
 inline void mouseEvent(DWORD dWflags, double dx, double dy) {
   Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
@@ -165,23 +164,25 @@ cv::Mat draw_bboxes(const cv::Mat &bgr, const std::vector<BoxInfo> &bboxes,
         cv::Scalar(color_list[bbox.label][0], color_list[bbox.label][1],
                    color_list[bbox.label][2]);
 
-    cv::rectangle(image,
-                  cv::Rect(cv::Point((bbox.x1 - effect_roi.x) * width_ratio,
-                                     (bbox.y1 - effect_roi.y) * height_ratio),
-                           cv::Point((bbox.x2 - effect_roi.x) * width_ratio,
-                                     (bbox.y2 - effect_roi.y) * height_ratio)),
-                  color);
+    cv::rectangle(
+        image,
+        cv::Rect(cv::Point(int((bbox.x1 - effect_roi.x) * width_ratio),
+                           int((bbox.y1 - effect_roi.y) * height_ratio)),
+                 cv::Point(int((bbox.x2 - effect_roi.x) * width_ratio),
+                           int((bbox.y2 - effect_roi.y) * height_ratio))),
+        color);
 
     char text[256];
-    sprintf(text, "%s %.1f%%", typeNames[bbox.label].c_str(), bbox.score * 100);
+    sprintf_s(text, "%s %.1f%%", typeNames[bbox.label].c_str(),
+              bbox.score * 100);
 
     int baseLine = 0;
     cv::Size label_size =
         cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
-    int x = (bbox.x1 - effect_roi.x) * width_ratio;
-    int y =
-        (bbox.y1 - effect_roi.y) * height_ratio - label_size.height - baseLine;
+    int x = int((bbox.x1 - effect_roi.x) * width_ratio);
+    int y = int((bbox.y1 - effect_roi.y) * height_ratio - label_size.height -
+                baseLine);
     if (y < 0) y = 0;
     if (x + label_size.width > image.cols) x = image.cols - label_size.width;
 
@@ -205,7 +206,7 @@ class fishingException : public std::exception {
 
 class fisherShutdown {};
 
-Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
+Fisher::Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath,
                json config) {
   InitScreenArea();
 
@@ -213,7 +214,6 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   this->fishNet = fishnet;
   // this->rodNet = rodnet;
   this->screen = screen;
-  this->ratio = double(screen->m_width) / double(processShape[0]);
 
   Writer writer;
 
@@ -271,6 +271,7 @@ Fisher::Fisher(NanoDet *fishnet, Screen *screen, std::string imgPath,
   }
   MaxControlWaiting = config["MaxControlWaiting"];
 
+  targetFish.label = 0;
   bait = -1;
 
   return;
@@ -328,13 +329,13 @@ void Fisher::getBBoxes(bool cover) {
     }
   }
 
-  // #ifdef DATA_COLLECT
-  //   // 1/50 probility to randomly record image
-  //   std::uniform_int_distribution<int> intDist(1, 1);
-  //   if (intDist(random_engine) == 1) {
-  //     imgLog("random", true);
-  //   }
-  // #endif
+#ifdef DATA_COLLECT
+  // 1/50 probility to randomly record image
+  std::uniform_int_distribution<int> intDist(1, 1);
+  if (intDist(random_engine) == 1) {
+    imgLog("random", true);
+  }
+#endif
 
   checkWorking();
   return;
@@ -800,10 +801,10 @@ void Fisher::checkBite() {
         std::ofstream data;
         data.open(logPath + "\\data.csv", std::ios::app);
         char output[1024];
-        sprintf(output, "%d, %f, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f",
-                logTime, biteTime, targetFish.label - 2, biteState,
-                targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
-                rod.x1, rod.x2, rod.y1, rod.y2);
+        sprintf_s(output, "%d, %f, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f",
+                  logTime, biteTime, targetFish.label - 2, biteState,
+                  targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
+                  rod.x1, rod.x2, rod.y1, rod.y2);
         data << output << std::endl;
         data.close();
 
@@ -818,7 +819,8 @@ void Fisher::checkBite() {
             .copyTo(roiImage(bbox2ROI(targetFish, processShape)));
 
         char filename[256];
-        sprintf(filename, "%s\\images\\%d_bite.png", logPath.c_str(), logTime);
+        sprintf_s(filename, "%s\\images\\%d_bite.png", logPath.c_str(),
+                  logTime);
 
         writer.addImage(filename, roiImage);
 
@@ -867,8 +869,8 @@ void Fisher::control() {
   time_t logTime = time(0);
 
   char filename[256];
-  sprintf(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
-          int(logTime), "match_controlbar", yBase);
+  sprintf_s(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
+            int(logTime), "match_controlbar", yBase);
 
   writer.addImage(filename, resized(cv::Rect(504, 0, 16, 216)));
 #endif
@@ -882,7 +884,7 @@ void Fisher::control() {
   bool start = false, end = false;
   double cursorScore, leftScore, rightScore;
 
-  int lastLeftEdgePos, lastRightEdgePos, lastCursorPos;
+  int lastLeftEdgePos = -1, lastRightEdgePos = -1, lastCursorPos = -1;
   bool first = true, matching_err = false;
 
   cv::Mat controlBox, progressRing;
@@ -918,9 +920,9 @@ void Fisher::control() {
               rightScore);
 
           char filename[256];
-          sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-                  int(logTime), "control_fail", leftEdgePos, cursorPos,
-                  rightEdgePos);
+          sprintf_s(filename, "%s/images/%d_%s_l%d_c%d_r%d.png",
+                    logPath.c_str(), int(logTime), "control_fail", leftEdgePos,
+                    cursorPos, rightEdgePos);
 
           // save colorful controlbox
           writer.addImage(filename, resized(cv::Rect(375, yBase, 273, 16)));
@@ -976,9 +978,9 @@ void Fisher::control() {
       std::cout << "warning: recognize control element matching error!"
                 << std::endl;
       char filename[256];
-      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-              int(logTime), "control_matching", leftEdgePos, cursorPos,
-              rightEdgePos);
+      sprintf_s(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                int(logTime), "control_matching", leftEdgePos, cursorPos,
+                rightEdgePos);
 
       // save colorful controlbox
       writer.addImage(filename, resized(cv::Rect(375, yBase, 273, 16)));
@@ -996,9 +998,9 @@ void Fisher::control() {
                 << std::endl;
 
       char filename[256];
-      sprintf(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
-              int(logTime), "control_moving", leftEdgePos, cursorPos,
-              rightEdgePos);
+      sprintf_s(filename, "%s/images/%d_%s_l%d_c%d_r%d.png", logPath.c_str(),
+                int(logTime), "control_moving", leftEdgePos, cursorPos,
+                rightEdgePos);
 
       // save colorful controlbox
       writer.addImage(filename, resized(cv::Rect(375, yBase, 273, 16)));
@@ -1057,8 +1059,8 @@ void Fisher::imgLog(char name[], bool bbox, int logTime) {
       cv::Scalar(255, 255, 255), -1);
 
   char filename[256];
-  sprintf(filename, "%s\\images\\%d_%s_orig.png", logPath.c_str(), logTime,
-          name);
+  sprintf_s(filename, "%s\\images\\%d_%s_orig.png", logPath.c_str(), logTime,
+            name);
   writer.addImage(filename, screenImage);
 
   if (bbox) {
@@ -1069,11 +1071,13 @@ void Fisher::imgLog(char name[], bool bbox, int logTime) {
     effect_roi.height = processShape[1];
     cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
     char bbox_filename[256];
+    double ratio = double(screen->m_width) / double(processShape[0]);
     cv::putText(bboxed_img, "target: " + typeNames[targetFish.label],
-                cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1 * ratio,
-                cv::Scalar(0, 0, 255), int(3 * ratio));
-    sprintf(bbox_filename, "%s\\images\\%d_%s_bbox.jpg", logPath.c_str(),
-            logTime, name);
+                cv::Point(int(50 * ratio), int(50 * ratio)),
+                cv::FONT_HERSHEY_SIMPLEX, ratio, cv::Scalar(0, 0, 255),
+                int(2 * ratio));
+    sprintf_s(bbox_filename, "%s\\images\\%d_%s_bbox.jpg", logPath.c_str(),
+              logTime, name);
     writer.addImage(bbox_filename, bboxed_img);
   }
 
@@ -1096,7 +1100,6 @@ void Fisher::fishing() {
         Sleep(100);  // wait for fisher launch
       }
       screen->init();
-      ratio = double(screen->m_width) / double(processShape[0]);
       while (working && (fishingFailCnt < MaxFailNum) && scanFish()) {
         printf("Fisher: Begin to try to catch a fish!\n");
         try {
@@ -1246,10 +1249,10 @@ void Fisher::getRodData() {
       std::ofstream data;
       data.open(logPath + "/data.csv", std::ios::app);
       char output[1024];
-      sprintf(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
-              int(time(0)), rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1,
-              targetFish.x2, targetFish.y1, targetFish.y2, targetFish.label - 2,
-              success);
+      sprintf_s(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
+                int(time(0)), rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1,
+                targetFish.x2, targetFish.y1, targetFish.y2,
+                targetFish.label - 2, success);
       data << output << std::endl;
       data.close();
 

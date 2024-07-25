@@ -10,7 +10,7 @@ using json = nlohmann::json;
 
 #include "config.h"
 #include "fishing.h"
-#include "nanodet.h"
+#include "yolov8.h"
 #include "screenshot.h"
 
 #ifdef RELEASE
@@ -157,8 +157,8 @@ int main() {
     return 0;
   }
 
-  NanoDet fishnet((modelPath + "/nanodet-fish_mod.param").c_str(),
-                  (modelPath + "/nanodet-fish_mod.bin").c_str(), useGPU);
+  YOLOV8 fishnet((modelPath + "/yolov8-fish.param").c_str(),
+                  (modelPath + "/yolov8-fish.bin").c_str(), useGPU);
 
   Screen screen;
   Fisher fisher(&fishnet, &screen, imgPath, config);
