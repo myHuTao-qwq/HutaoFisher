@@ -4,6 +4,12 @@
 
 
 
+## ⚠重要提醒
+
+如遇程序闪退问题，请尝试安装[VC++ Redistributable package](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
+
+
 ## 功能更新 Functional Update
 
 #### 2024/7/25
