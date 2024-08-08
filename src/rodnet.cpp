@@ -62,7 +62,7 @@ int _getRodState(rodInput input) {
   double y0, z0, t;
   double x, y, dist;
 
-  y0 = sqrt(pow(a, 4) - b * b + a * a * (1 - b * b - v0 * v0)) / (a * a);
+  y0 = sqrt(pow(a, 4) - b * b + a * a * (1 - b * b + v0 * v0)) / (a * a);
   z0 = b / (a * a);
   t = a * a * (y0 * b + v0) / (a * a - b * b);
 
