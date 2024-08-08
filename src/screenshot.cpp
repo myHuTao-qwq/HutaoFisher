@@ -1,10 +1,19 @@
 #include "screenshot.h"
 
-#include <iostream>
-
-#include "shellscalingapi.h"
-
 using cv::Mat;
+
+inline RECT GetWindowRect(HWND hWnd) {
+  RECT windowRect;
+  DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &windowRect,
+                        sizeof(RECT));
+  return windowRect;
+}
+
+inline RECT GetGameScreenRect(HWND hWnd) {
+  RECT clientRect;
+  GetClientRect(hWnd, &clientRect);
+  return clientRect;
+}
 
 Screen::Screen() { this->init(); }
 
@@ -128,4 +137,34 @@ Mat Screen::getScreenshot() {
 Mat Screen::getScreenshot(int x, int y, int width, int height) {
   Mat screenshot = getScreenshot();
   return screenshot(cv::Rect(x, y, width, height));
+}
+
+RECT Screen::GetCaptureRect(HWND hWnd) {
+  RECT windowRect = GetWindowRect(hWnd);
+  RECT gameScreenRect = GetGameScreenRect(hWnd);
+  long left = windowRect.left;
+  long top = windowRect.top + (windowRect.bottom - windowRect.top) -
+             (gameScreenRect.bottom - gameScreenRect.top);
+  long right = left + gameScreenRect.right - gameScreenRect.left;
+  long bottom = top + gameScreenRect.bottom - gameScreenRect.top;
+  return {left, top, right, bottom};
+}
+
+std::pair<double, double> Screen::getAbsPos(double x, double y) {
+  int screenWidth, screenHeight;
+
+  HDC hdc = GetDC(NULL);
+  screenWidth = GetDeviceCaps(hdc, HORZRES);
+  screenHeight = GetDeviceCaps(hdc, VERTRES);
+  ReleaseDC(NULL, hdc);
+
+  // 获取游戏捕获区域
+  RECT captureArea = GetCaptureRect(this->gameHandle);
+  double gameWidth = captureArea.right - captureArea.left;
+  double gameHeight = captureArea.bottom - captureArea.top;
+
+  x = (x * 1.0 / 65535 * gameWidth + captureArea.left) * 65535 / screenWidth;
+  y = (y * 1.0 / 65535 * gameHeight + captureArea.top) * 65535 / screenHeight;
+
+  return std::pair<double, double>(x, y);
 }

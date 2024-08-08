@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.4.1...3.5)
 set(CMAKE_CXX_STANDARD 17)
 
-project(fisher VERSION 4.8.1)
+project(fisher VERSION 4.8.2)
 
 option(RELEASE "change directories" OFF)
 option(DATA_COLLECT "specialize for collecting data" OFF)
 
 if(NOT RELEASE)
     set(OpenCV_DIR "../../opencv/build") # collecting data needs cv::imshow
-    option(TEST "collect rod data" OFF)
 else()
     set(OpenCV_STATIC ON) # this option doesn't work with a pre-build opencv (not mobile)
     set(OpenCV_DIR "../../opencv-mobile/x64")

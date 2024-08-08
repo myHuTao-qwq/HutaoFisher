@@ -1,5 +1,4 @@
 #include <Windows.h>
-#include <dwmapi.h>
 
 #include <algorithm>
 #include <cmath>
@@ -93,8 +92,7 @@ class Fisher {
   void imgLog(char name[], bool bbox, int logTime = NULL);
   void errLog();
 
-  void mouseEventPos(DWORD dWflags, double dx, double dy);
-  RECT GetCaptureRect(HWND hWnd);
+  // void mouseEventPos(DWORD dWflags, double dx, double dy);
 
  public:
   Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath, json config);
@@ -104,10 +102,6 @@ class Fisher {
 
   void fishing();
 
-#ifdef TEST
-  bool testing = true;
-  void getRodData();
-#endif
 };
 
 double bboxDist(BoxInfo rod, BoxInfo fish1, BoxInfo fish2);

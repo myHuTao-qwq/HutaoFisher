@@ -58,60 +58,17 @@ const int progressRingPx[][2] = {{15, 3},
                                  {8, 4},
                                  {12, 3}};
 
+std::pair<double, double> xy;
+
 inline void mouseEvent(DWORD dWflags, double dx, double dy) {
   Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
   mouse_event(dWflags, DWORD(dx), DWORD(dy), 0, 0);
   return;
 }
 
-int screenWidth, screenHeight;
-
-void Fisher::mouseEventPos(DWORD dWflags, double dx, double dy) {
-  Sleep(20);  // motherfucker why? but without sleeping mouse_event goes wrong
-
-  // 获取游戏捕获区域
-  RECT captureArea = GetCaptureRect(this->screen->gameHandle);
-  double gameWidth = captureArea.right - captureArea.left;
-  double gameHeight = captureArea.bottom - captureArea.top;
-
-  mouse_event(dWflags,
-              DWORD((dx * 1.0 / 65535 * gameWidth + captureArea.left) * 65535 /
-                    screenWidth),
-              DWORD((dy * 1.0 / 65535 * gameHeight + captureArea.top) * 65535 /
-                    screenHeight),
-              0, 0);
+inline void mouseEvent(DWORD dWflags, std::pair<double, double> xy) {
+  mouseEvent(dWflags, xy.first, xy.second);
   return;
-}
-
-inline void InitScreenArea() {
-  HDC hdc = GetDC(NULL);
-  screenWidth = GetDeviceCaps(hdc, HORZRES);
-  screenHeight = GetDeviceCaps(hdc, VERTRES);
-  ReleaseDC(NULL, hdc);
-}
-
-inline RECT GetWindowRect(HWND hWnd) {
-  RECT windowRect;
-  DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &windowRect,
-                        sizeof(RECT));
-  return windowRect;
-}
-
-inline RECT GetGameScreenRect(HWND hWnd) {
-  RECT clientRect;
-  GetClientRect(hWnd, &clientRect);
-  return clientRect;
-}
-
-RECT Fisher::GetCaptureRect(HWND hWnd) {
-  RECT windowRect = GetWindowRect(hWnd);
-  RECT gameScreenRect = GetGameScreenRect(hWnd);
-  long left = windowRect.left;
-  long top = windowRect.top + (windowRect.bottom - windowRect.top) -
-             (gameScreenRect.bottom - gameScreenRect.top);
-  long right = left + gameScreenRect.right - gameScreenRect.left;
-  long bottom = top + gameScreenRect.bottom - gameScreenRect.top;
-  return {left, top, right, bottom};
 }
 
 double bboxDist(BoxInfo rod, BoxInfo fish1,
@@ -208,8 +165,6 @@ class fisherShutdown {};
 
 Fisher::Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath,
                json config) {
-  InitScreenArea();
-
   this->working = false;
   this->fishNet = fishnet;
   // this->rodNet = rodnet;
@@ -477,10 +432,10 @@ void Fisher::chooseBait() {
   mouseEvent(MOUSEEVENTF_RIGHTDOWN, 0, 0);
   mouseEvent(MOUSEEVENTF_RIGHTUP, 0, 0);
 
-  mouseEventPos(
-      MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 23333,
-      45965);  // move the mouse away from the baits to prevent
-               // mismatching, 23333 45965 is the pos of the cancel button
+  xy = this->screen->getAbsPos(23333, 45965);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,
+             xy);  // move the mouse away from the baits to prevent
+                   // mismatching, 23333 45965 is the pos of the cancel button
 
   Sleep(300);  // wait for the window to pop
 
@@ -504,29 +459,28 @@ void Fisher::chooseBait() {
 
   if (minScore > 2e6) {  // not found, 2e6 is an empirical threshold
     // click cancel button
-    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 23333, 45965);
-    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 23333, 45965);
+    xy = this->screen->getAbsPos(23333, 45965);
+    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, xy);
+    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, xy);
     throw fishingException("choose bait error: cannot find a proper bait!");
   }
 
   // click the position of bait
   checkWorking();
-  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,
-                double(minIdx.x + 29) / double(processShape[0]) * 65535,
-                double(minIdx.y + 29) / double(processShape[1]) * 65535);
-  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN,
-                double(minIdx.x + 29) / double(processShape[0]) * 65535,
-                double(minIdx.y + 29) / double(processShape[1]) * 65535);
-  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP,
-                double(minIdx.x + 29) / double(processShape[0]) * 65535,
-                double(minIdx.y + 29) / double(processShape[1]) * 65535);
+  xy = this->screen->getAbsPos(
+      double(minIdx.x + 29) / double(processShape[0]) * 65535,
+      double(minIdx.y + 29) / double(processShape[1]) * 65535);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, xy);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, xy);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, xy);
 
   // click confirm button, 44543 45965 is its position
   checkWorking();
   Sleep(300);
-  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
-  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 44543, 45965);
-  mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 44543, 45965);
+  xy = this->screen->getAbsPos(44543, 45965);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, xy);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, xy);
+  mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, xy);
 
   // check whether succeeed to exit (if click the previous selected bait it will
   // pop a mask so we need to click again)
@@ -539,9 +493,10 @@ void Fisher::chooseBait() {
 
   checkWorking();
   if (colorDiff(backgroundColor, screencolor) < 10) {
-    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, 44543, 45965);
-    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, 44543, 45965);
-    mouseEventPos(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, 44543, 45965);
+    xy = this->screen->getAbsPos(44543, 45965);
+    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, xy);
+    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, xy);
+    mouseEvent(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, xy);
     // final check
     Sleep(300);
     cv::resize(screen->getScreenshot(), baitScreenshot,
@@ -1157,109 +1112,3 @@ void Fisher::fishing() {
 
   return;
 }
-
-#ifdef TEST
-void Fisher::getRodData() {
-  while (true) {
-    if (working) {
-      while (testing) {
-        Sleep(10);
-      }
-      testing = true;
-
-      Beep(C4, 250);
-      Beep(G4, 250);
-
-      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
-
-      while (testing) {
-        Sleep(10);
-      }
-      testing = true;
-
-      Beep(C4, 250);
-      Beep(G4, 250);
-
-      getBBoxes(false);
-
-      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
-
-      Sleep(3000);
-
-      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
-      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
-
-      object_rect effect_roi;
-      effect_roi.x = 0;
-      effect_roi.y = 0;
-      effect_roi.width = processShape[0];
-      effect_roi.height = processShape[1];
-      cv::Mat resized;
-      cv::resize(screenImage, resized, cv::Size(1600, 900));
-      cv::Mat bboxed_img = draw_bboxes(resized, bboxes, effect_roi);
-
-      cv::imshow("bbox", bboxed_img);
-      cv::waitKey(0);
-      cv::destroyAllWindows();
-
-      std::vector<BoxInfo> rods, fishes;
-      for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
-           i++) {
-        if (i->label == 0) {
-          rods.push_back(*i);
-        } else if (i->label > 1) {
-          fishes.push_back(*i);
-        }
-      }
-
-      if (rods.empty()) {
-        printf("error: no rods!\n");
-        imgLog("getData", true);
-        return;
-      }
-
-      rod = *std::max_element(rods.begin(), rods.end(),
-                              [](BoxInfo bbox1, BoxInfo bbox2) {
-                                return bbox1.score < bbox2.score;
-                              });  // find the most confident rod;
-
-      targetFish = *std::min_element(
-          fishes.begin(), fishes.end(), [this](BoxInfo bbox1, BoxInfo bbox2) {
-            return bboxDist(rod, bbox1) < bboxDist(rod, bbox2);
-          });  // find the closest fish
-
-      std::cout << "nearest fish: " << typeNames[targetFish.label] << std::endl;
-
-      int success;
-      printf("Successed? 0: success 1: too close 2: too far              ");
-      std::cin >> success;
-
-      int save_results;
-      printf("save results? 0: save results 1:save picture else: skip    ");
-      std::cin >> save_results;
-      if (save_results == 1) {
-        imgLog("getData", true);
-        printf("done!\n");
-        continue;
-      } else if (save_results != 0) {
-        printf("done!\n");
-        continue;
-      }
-
-      std::ofstream data;
-      data.open(logPath + "/data.csv", std::ios::app);
-      char output[1024];
-      sprintf_s(output, "%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d",
-                int(time(0)), rod.x1, rod.x2, rod.y1, rod.y2, targetFish.x1,
-                targetFish.x2, targetFish.y1, targetFish.y2,
-                targetFish.label - 2, success);
-      data << output << std::endl;
-      data.close();
-
-      printf("done!\n");
-    }
-  }
-
-  return;
-}
-#endif
