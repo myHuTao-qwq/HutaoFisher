@@ -10,8 +10,8 @@ using json = nlohmann::json;
 
 #include "config.h"
 #include "fishing.h"
-#include "yolov8.h"
 #include "screenshot.h"
+#include "yolov8.h"
 
 #ifdef RELEASE
 const std::string imgPath = "resource/imgs";
@@ -96,12 +96,6 @@ int main() {
     config = json::parse(f);
     f.close();
 
-    const std::vector<std::string> fishNames{
-        "medaka",      "large_medaka",      "stickleback",
-        "koi",         "butterflyfish",     "pufferfish",
-        "formalo_ray", "divda_ray",         "angler",
-        "axe_marlin",  "heartfeather_bass", "maintenance_mek"};
-
     std::cout << "Configurations:\n";
     std::cout << std::setw(32) << std::left
               << "  Use GPU to infer: " << config["useGPU"] << '\n';
@@ -130,15 +124,13 @@ int main() {
       return 0;
     } else {
       std::cout << "  Types of fish to be caught:\n";
-      for (std::vector<std::string>::iterator i = fishYes.begin();
-           i < fishYes.end(); i++) {
+      for (auto i = fishYes.begin(); i < fishYes.end(); i++) {
         std::cout << "    " + *i + "\n";
       }
     }
     if (!fishNo.empty()) {
       std::cout << "  Types of fish not to be caught:\n";
-      for (std::vector<std::string>::iterator i = fishNo.begin();
-           i < fishNo.end(); i++) {
+      for (auto i = fishNo.begin(); i < fishNo.end(); i++) {
         std::cout << "    " + *i + "\n";
       }
     }
@@ -158,7 +150,7 @@ int main() {
   }
 
   YOLOV8 fishnet((modelPath + "/yolov8-fish.param").c_str(),
-                  (modelPath + "/yolov8-fish.bin").c_str(), useGPU);
+                 (modelPath + "/yolov8-fish.bin").c_str(), useGPU);
 
   Screen screen;
   Fisher fisher(&fishnet, &screen, imgPath, config);

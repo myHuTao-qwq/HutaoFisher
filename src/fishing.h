@@ -11,10 +11,10 @@
 using json = nlohmann::json;
 
 #include "config.h"
-#include "yolov8.h"
 #include "rodnet.h"
 #include "screenshot.h"
 #include "writer.h"
+#include "yolov8.h"
 
 // music notes! qwq
 #define A3 220
@@ -26,6 +26,18 @@ using json = nlohmann::json;
 #define A4 440
 #define B4 494
 #define C5 523
+
+const std::vector<std::string> fishNames{"medaka",
+                                         "large_medaka",
+                                         "stickleback",
+                                         "koi",
+                                         "butterflyfish",
+                                         "pufferfish",
+                                         "ray",
+                                         "angler",
+                                         "axe_marlin",
+                                         "heartfeather_bass",
+                                         "maintenance_mek"};
 
 class Fisher {
  private:
@@ -50,9 +62,9 @@ class Fisher {
   int MaxThrowFailNum = 5;  // at most 5 times miss fish can be tolerated
   // unit: second
   double MaxThrowWaiting = 3;
-  double MaxBiteWaiting[FISH_CLASS_NUM] = {8,    8.5,  9.5,  10.5, 8.5,
-                                           11.5, 11.5, 10.5, 9.5,  8.5,
-                                           10,   10};  // index is fish label
+  double MaxBiteWaiting[FISH_CLASS_NUM] = {
+      8,    8.5, 9.5, 10.5, 8.5, 11.5,
+      11.5, 9.5, 8.5, 10,   10};  // index is fish label
   double MaxControlWaiting = 3;
 
   bool typeToFish[FISH_CLASS_NUM];
@@ -101,7 +113,6 @@ class Fisher {
   bool working;
 
   void fishing();
-
 };
 
 double bboxDist(BoxInfo rod, BoxInfo fish1, BoxInfo fish2);

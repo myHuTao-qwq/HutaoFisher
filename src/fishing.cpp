@@ -10,7 +10,7 @@ const BoxInfo refBBox = {float(InputSize[1]) / 2 - 16,
 /* 0: fruit paste 1: redrot 2: false worm 3: fake fly 4: sugardew 5: sour 6:
  * flashing*/
 // index represents (fish_lable - 1)
-const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 3, 4, 4, 5, 6};
+const int baitList[FISH_CLASS_NUM] = {0, 0, 1, 3, 2, 3, 3, 4, 4, 5, 6};
 
 const std::vector<std::string> typeNames{"rod",
                                          "err_rod",
@@ -18,14 +18,30 @@ const std::vector<std::string> typeNames{"rod",
                                          "large_medaka",
                                          "stickleback",
                                          "koi",
+                                         "koi_head",
                                          "butterflyfish",
                                          "pufferfish",
-                                         "formalo_ray",
-                                         "divda_ray",
+                                         "ray",
                                          "angler",
                                          "axe_marlin",
                                          "heartfeather_bass",
                                          "maintenance_mek"};
+
+const std::map<std::string, int> fishLabels{{"medaka", 2},
+                                            {"large_medaka", 3},
+                                            {"stickleback", 4},
+                                            {"koi", 5},
+                                            {"butterflyfish", 7},
+                                            {"pufferfish", 8},
+                                            {"ray", 9},
+                                            {"angler", 10},
+                                            {"axe_marlin", 11},
+                                            {"heartfeather_bass", 12},
+                                            {"maintenance_mek", 13}};
+
+const std::map<int, int> label2fish{{2, 0},  {3, 1},  {4, 2},  {5, 3},
+                                    {6, 3},  {7, 4},  {8, 5},  {9, 6},
+                                    {10, 7}, {11, 8}, {12, 9}, {13, 10}};
 
 const std::vector<std::string> baitNames{"fruit paste",
                                          "redrot",
@@ -214,19 +230,19 @@ Fisher::Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath,
   }
 
   for (int i = 0; i < FISH_CLASS_NUM; i++) {
-    typeToFish[i] = config["typeToFish"][typeNames[i + NON_FISH_CLASS_NUM]];
+    typeToFish[i] = config["typeToFish"][fishNames[i]];
   }
+
   MaxFailNum = config["MaxFailNum"];
   MaxRodTries = config["MaxRodTries"];
   MaxThrowFailNum = config["MaxThrowFailNum"];
   MaxThrowWaiting = config["MaxThrowWaiting"];
   for (int i = 0; i < FISH_CLASS_NUM; i++) {
-    MaxBiteWaiting[i] =
-        config["MaxBiteWaiting"][typeNames[NON_FISH_CLASS_NUM + i]];
+    MaxBiteWaiting[i] = config["MaxBiteWaiting"][fishNames[i]];
   }
   MaxControlWaiting = config["MaxControlWaiting"];
 
-  targetFish.label = 0;
+  targetFish.label = -1;
   bait = -1;
 
   return;
@@ -266,9 +282,8 @@ void Fisher::getBBoxes(bool cover) {
 
   std::vector<BoxInfo> rawBBoxes, modBBoxes;
   rawBBoxes = fishNet->detect(resized_img, SCORE_THRESHOLD, NMS_THRESHOLD);
-  for (std::vector<BoxInfo>::iterator i = rawBBoxes.begin();
-       i < rawBBoxes.end(); i++) {
-    if (typeToFish[i->label - NON_FISH_CLASS_NUM]) {
+  for (auto i = rawBBoxes.begin(); i < rawBBoxes.end(); i++) {
+    if (i->label < NON_FISH_CLASS_NUM || typeToFish[label2fish.at(i->label)]) {
       modBBoxes.push_back(*i);
     }
   }
@@ -297,14 +312,15 @@ void Fisher::getBBoxes(bool cover) {
 }
 
 int Fisher::getRodState(BoxInfo rod, BoxInfo fish) {
-#ifdef DATA_COLLECT
-  // 1/2 probility to make the fisher beleive the rod is in proper position,
-  // ignoring whether it's a real proper position
-  std::uniform_int_distribution<int> intDist(0, 1);
-  if (intDist(random_engine) == 0) {
-    return 0;
-  }
-#endif
+  // #ifdef DATA_COLLECT
+  //   // 1/2 probility to make the fisher beleive the rod is in proper
+  //   position,
+  //   // ignoring whether it's a real proper position
+  //   std::uniform_int_distribution<int> intDist(0, 1);
+  //   if (intDist(random_engine) == 0) {
+  //     return 0;
+  //   }
+  // #endif
   rodInput input;
   input.rod_x1 = rod.x1;
   input.rod_x2 = rod.x2;
@@ -314,8 +330,12 @@ int Fisher::getRodState(BoxInfo rod, BoxInfo fish) {
   input.fish_x2 = fish.x2;
   input.fish_y1 = fish.y1;
   input.fish_y2 = fish.y2;
-  input.fish_label = fish.label - 2;  // no rods!
+  input.fish_label = label2fish.at(fish.label);
   int state = _getRodState(input);
+
+#ifdef DATA_COLLECT
+  if (state == 1) state = 0;
+#endif
 
   return state;
 }
@@ -330,7 +350,7 @@ bool Fisher::scanFish() {
       if (bboxes.empty()) {  // found no fish
         mouseEvent(MOUSEEVENTF_MOVE, int(650 * steps[j][0]),
                    int(800 * steps[j][1]));
-        Sleep(100);
+        Sleep(150);
       } else {
         printf("    scan fish: find fish!\n");
         return true;  // found fish
@@ -366,7 +386,13 @@ void Fisher::selectFish() {
     throw fishingException(
         "select fish error: there should be no err_rod in screen!");
   }
+
   targetFish = bboxes[0];
+
+  if (targetFish.label == 5) {
+    targetFish.label = 6;
+  }
+
 #ifdef DATA_COLLECT
   imgLog("select", true);
 #endif
@@ -413,7 +439,8 @@ void Fisher::selectFish() {
     }
   }
 
-  std::cout << "    select fish: " << typeNames[targetFish.label] << std::endl;
+  std::cout << "    select fish: " << fishNames[label2fish.at(targetFish.label)]
+            << std::endl;
   return;
 }
 
@@ -422,11 +449,11 @@ void Fisher::chooseBait() {
   Beep(F4, 250);
   checkWorking();
 
-  if (baitList[targetFish.label - 2] == bait) {
+  if (baitList[label2fish.at(targetFish.label)] == bait) {
     return;
   } else {
     // all the errors will reset bait to -1, so there should be no bug here?
-    bait = baitList[targetFish.label - 2];
+    bait = baitList[label2fish.at(targetFish.label)];
   }
 
   mouseEvent(MOUSEEVENTF_RIGHTDOWN, 0, 0);
@@ -539,8 +566,7 @@ void Fisher::throwRod() {
     targetFishes.clear();
     rods.clear();
 
-    for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
-         i++) {
+    for (auto i = bboxes.begin(); i < bboxes.end(); i++) {
       if (i->label == 0) {
         rods.push_back(*i);
       } else if (i->label == targetFish.label) {
@@ -710,7 +736,7 @@ void Fisher::checkBite() {
 
   double biteTime = 0;
   while (double(clock() - startTime) / CLOCKS_PER_SEC <
-         MaxBiteWaiting[targetFish.label - 2]) {
+         MaxBiteWaiting[label2fish.at(targetFish.label)]) {
     checkWorking();
     cv::Mat biteImage = screen->getScreenshot();
     cv::cvtColor(biteImage, gray, cv::COLOR_BGR2GRAY);
@@ -757,7 +783,7 @@ void Fisher::checkBite() {
         data.open(logPath + "\\data.csv", std::ios::app);
         char output[1024];
         sprintf_s(output, "%d, %f, %d, %d, %f, %f, %f, %f, %f, %f, %f, %f",
-                  logTime, biteTime, targetFish.label - 2, biteState,
+                  logTime, biteTime, label2fish.at(targetFish.label), biteState,
                   targetFish.x1, targetFish.x2, targetFish.y1, targetFish.y2,
                   rod.x1, rod.x2, rod.y1, rod.y2);
         data << output << std::endl;
@@ -1107,6 +1133,10 @@ void Fisher::fishing() {
       bait = -1;
       std::cerr << "    Fisher: Fishing process was manually aborted!\n";
       continue;
+    } catch (const std::exception &e) {
+      std::cerr << e.what() << std::endl;
+      system("pause");
+      throw(e);
     }
   }
 
