@@ -71,8 +71,8 @@ class Fisher {
   bool logAllImgs;
   bool logData;
 
-  cv::Mat hookImg, pullImg, centralBarImg, leftEdgeImg, cursorImg, rightEdgeImg,
-      leftEdgeMask, rightEdgeMask;
+  cv::Mat hookImg, pullImg, centralBarImg, centralBarMask, leftEdgeImg,
+      cursorImg, rightEdgeImg, leftEdgeMask, rightEdgeMask;
   cv::Mat baitImgs[BAIT_CLASS_NUM];
 
   YOLOV8 *fishNet;
@@ -104,7 +104,6 @@ class Fisher {
   void imgLog(char name[], bool bbox, int logTime = NULL);
   void errLog();
 
-  // void mouseEventPos(DWORD dWflags, double dx, double dy);
 
  public:
   Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath, json config);

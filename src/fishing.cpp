@@ -199,6 +199,8 @@ Fisher::Fisher(YOLOV8 *fishnet, Screen *screen, std::string imgPath,
   hookImg = cv::imread(imgPath + "/hook.png", cv::IMREAD_GRAYSCALE);
   pullImg = cv::imread(imgPath + "/pull.png", cv::IMREAD_GRAYSCALE);
   centralBarImg = cv::imread(imgPath + "/centralBar.png", cv::IMREAD_GRAYSCALE);
+  centralBarMask =
+      cv::imread(imgPath + "/centralBarMask.png", cv::IMREAD_GRAYSCALE);
   cursorImg = cv::imread(imgPath + "/cursor.png", cv::IMREAD_GRAYSCALE);
   leftEdgeImg = cv::imread(imgPath + "/leftEdge.png", cv::IMREAD_GRAYSCALE);
   rightEdgeImg = cv::imread(imgPath + "/rightEdge.png", cv::IMREAD_GRAYSCALE);
@@ -482,7 +484,7 @@ void Fisher::chooseBait() {
                                      // fact doesn't cost much time (~30ms).....
   cv::minMaxLoc(score, &minScore, nullptr, &minIdx, nullptr);
 
-  std::cout << "template diff: " << minScore << "/" << 2e6 << std::endl;
+  std::cout << "bait template diff: " << minScore << "/200000" << std::endl;
 
   if (minScore > 2e6) {  // not found, 2e6 is an empirical threshold
     // click cancel button
@@ -828,7 +830,7 @@ void Fisher::control() {
   int yBase;
   cv::Mat gray, resized, cutted, score;
   clock_t startTime = clock();
-  double maxScore;
+  double minScore;
   cv::Point maxIdx, minIdx;
 
   while (double(clock() - startTime) / CLOCKS_PER_SEC < MaxControlWaiting) {
@@ -838,10 +840,13 @@ void Fisher::control() {
     cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
     //(504,0,16,216) is the possible position of progress ring
     cv::matchTemplate(resized(cv::Rect(504, 0, 16, 216)), centralBarImg, score,
-                      cv::TM_CCOEFF);
-    cv::minMaxLoc(score, nullptr, &maxScore, nullptr, &maxIdx);
-    if (maxScore > 2e5) {
-      yBase = maxIdx.y;
+                      cv::TM_SQDIFF, centralBarMask);
+    cv::minMaxLoc(score, &minScore, nullptr, &minIdx, nullptr);
+
+    if (minScore < 5e3) {
+      yBase = minIdx.y;
+      std::cout << "control bar match score: " << minScore
+                << "/5000, yBase: " << yBase << std::endl;
       break;
     }
   }
@@ -852,11 +857,10 @@ void Fisher::control() {
   char filename[256];
   sprintf_s(filename, "%s/images/%d_%s_yBase=%d.png", logPath.c_str(),
             int(logTime), "match_controlbar", yBase);
-
   writer.addImage(filename, resized(cv::Rect(504, 0, 16, 216)));
 #endif
 
-  if (maxScore <= 2e5) {
+  if (minScore >= 5e3) {
     throw fishingException("control error: control box didn't appear!");
   }
 
