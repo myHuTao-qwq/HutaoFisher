@@ -755,16 +755,17 @@ void Fisher::checkBite() {
   mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
   mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
 
-  // data collect----------------------------------------------------
+#ifdef DATA_COLLECT
   if (logData) {
     int biteState = -1;
     bool record = true;  // to guarentee the recorded fish is the biting fish
 
-    for (std::vector<BoxInfo>::iterator i = bboxes.begin(); i < bboxes.end();
-         i++) {
-      if (i->label == targetFish.label && !bboxEqual(targetFish, *i) &&
-          bboxDist(rod, rod, *i) < bboxDist(rod, rod, targetFish) * 2) {
+    for (auto i = bboxes.begin(); i < bboxes.end(); i++) {
+      if (i->label > NON_FISH_CLASS_NUM && !bboxEqual(targetFish, *i) &&
+          baitList[label2fish.at(targetFish.label)] ==
+              baitList[label2fish.at(i->label)]) {
         record = false;
+        break;
       }
     }
 
@@ -772,7 +773,8 @@ void Fisher::checkBite() {
       if (biteSuccess) {
         biteState = 0;
       } else {
-        Beep(C4, 250);
+        Beep(C4, 125);
+        Beep(A3, 125);
         printf(
             "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
             "save\n");
@@ -811,7 +813,7 @@ void Fisher::checkBite() {
       }
     }
   }
-  // data collect----------------------------------------------------
+#endif
 
   if (biteSuccess) {
     printf("    checkBite: the fish gets hooked after %lf seconds!\n",
