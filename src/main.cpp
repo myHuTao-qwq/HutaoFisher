@@ -186,17 +186,6 @@ int main() {
         Beep(E4, 250);
         Beep(C4, 250);
         break;
-#ifdef TEST
-      case 2:
-        if (fisher.working) {
-          printf("Hotkey Alt+A has been pressed, run fisher test!\n");
-          fisher.testing = false;
-        } else {
-          printf(
-              "Hotkey Alt+A has been pressed, but fisher isn't "
-              "running!\n");
-        }
-#endif
     }
   }
 
