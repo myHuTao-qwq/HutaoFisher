@@ -829,7 +829,7 @@ void Fisher::control() {
   cv::Mat gray, resized, cutted, score;
   clock_t startTime = clock();
   double maxScore;
-  cv::Point maxIdx;
+  cv::Point maxIdx, minIdx;
 
   while (double(clock() - startTime) / CLOCKS_PER_SEC < MaxControlWaiting) {
     checkWorking();
@@ -920,24 +920,24 @@ void Fisher::control() {
     matching_err = false;
 
     // find left edge
-    cv::matchTemplate(controlBox, leftEdgeImg, score, cv::TM_CCOEFF_NORMED,
+    cv::matchTemplate(controlBox, leftEdgeImg, score, cv::TM_SQDIFF,
                       leftEdgeMask);
-    cv::minMaxLoc(score, nullptr, &leftScore, nullptr, &maxIdx);
-    if (leftScore > 0.68) {
-      leftEdgePos = maxIdx.x;
+    cv::minMaxLoc(score, &leftScore, nullptr, &minIdx, nullptr);
+    if (leftScore < 1e3) {
+      leftEdgePos = minIdx.x;
     } else {
-      // leftEdgePos = cursorPos;
+      leftEdgePos = cursorPos;
       matching_err = true;
     }
 
     // find right edge
-    cv::matchTemplate(controlBox, rightEdgeImg, score, cv::TM_CCOEFF_NORMED,
+    cv::matchTemplate(controlBox, rightEdgeImg, score, cv::TM_SQDIFF,
                       rightEdgeMask);
-    cv::minMaxLoc(score, nullptr, &rightScore, nullptr, &maxIdx);
-    if (rightScore > 0.68) {
-      rightEdgePos = maxIdx.x;
+    cv::minMaxLoc(score, &rightScore, nullptr, &minIdx, nullptr);
+    if (rightScore < 1e3) {
+      rightEdgePos = minIdx.x;
     } else {
-      // rightEdgePos = cursorPos;
+      rightEdgePos = cursorPos;
       matching_err = true;
     }
 
@@ -1015,11 +1015,12 @@ void Fisher::control() {
     }
     checkWorking();
     // a super simple strategy
-    if (double(cursorPos - leftEdgePos) / double(rightEdgePos - leftEdgePos) <
+    if (double(cursorPos - leftEdgePos) /
+            double(rightEdgePos - leftEdgePos + 1) <
         0.4) {
-      mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
     } else {
-      mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
     }
   }
 
