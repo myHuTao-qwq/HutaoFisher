@@ -12,6 +12,13 @@
 
 ## 功能更新 Functional Update
 
+#### 2024/8/14
+
+- 再次优化了确定最佳张力区左右边界的模板匹配过程, 提高拉扯的稳定性
+- 更新钓鱼模型, 提高了钓假龙的性能
+
+
+
 #### 2024/7/25
 
 - 把模型换成yolov8n, 以少许降低CPU推理性能为代价大幅提升mAP
@@ -31,13 +38,6 @@
 - 适配沉玉谷钓鱼点与鱼
 - 优化了确定最佳张力区左右边界的模板匹配过程, 基本修复了控制失败的bug
 - 改进了采集抛竿-咬钩数据的方式
-
-
-
-#### 2023/11/16
-
-- 修复了一个在枫丹特定水域会把海浪条纹识别成控制框导致钓鱼失败的bug
-- 更新模型参数, 优化了在4.1 4.2新区域钓鱼点的表现
 
 
 
@@ -95,11 +95,9 @@
 - 重构抛竿判定：将其抽象为一三分类器（过近，过远，刚好）。并且在判定抛竿的部分通过一定的近似消除摄像机高度的影响。
 - 删除了强化学习力度控制（因为我不会）
 - 加入了对渊下宫鳐鱼的支持
-- 将识别网络替换为~~[nanodet](https://github.com/RangiLyu/nanodet)~~(现在是[yolov8n](https://github.com/ultralytics/ultralytics)了)，使用[ncnn](https://github.com/Tencent/ncnn)进行推理，并进一步调试，并在自己的钓鱼数据集上达到了0.891的mAP
+- 将识别网络替换为~~[nanodet](https://github.com/RangiLyu/nanodet)~~(现在是[yolov8n](https://github.com/ultralytics/ultralytics)了)，使用[ncnn](https://github.com/Tencent/ncnn)进行推理，并进一步调试，并在自己的钓鱼数据集上~~达到了0.891的mAP~~反正很高就是了, 每一锅都在变
 - 优化了一些错误情况的处理，使整体鲁棒性加强
 - 实现多分辨率适配。（通过将截屏缩放到一1024\*576的中间层进行处理，因此原则上分辨率高于1024\*576即可正常运行）
-
-欢迎将钓鱼数据(自动截图以及钓鱼成功信息, 即log文件夹内容)邮件发到infinitesimal.q@gmail.com以帮助改善性能. 截图已自动擦除uid.
 
 ---
 
@@ -119,8 +117,6 @@ Refer to the work [genshin-auto-fish](https://github.com/7eu7d7/genshin_auto_fis
 
 - Achieve multi-resolution adaptation. (By scaling the screen to a 1024\*576 intermediate layer for processing, so in theory if you have a resolution higher than 1024\*576 the fisher can work properly)
 
-Welcome to email your fising data (automatic screenshots and fishing success messages, i.e. the content in folder ./log) to infinitesimal.q@gmail.com to help us improve the program. We have automatically erased the uid in the screenshots.
-
 
 
 
@@ -132,11 +128,11 @@ Welcome to email your fising data (automatic screenshots and fishing success mes
 
 可在config.json中设置是否使用GPU推理(useGPU)，是否记录全部图像(logAllImgs)（错误时的图像始终会被输出，但其他图像记录可被关闭），是否记录抛竿数据以帮助优化抛竿判定(logData)（此项若为是，则抛竿失败后需Alt+Tab切出原神输入错误原因）, 以及是否钓某一大类的鱼(typeToFish). 具体config.json的含义见help.txt.
 
-在全屏模式下运行游戏，并且显示器长宽比应为16:9（重要！）
+游戏界面的长宽比应为16:9（重要！）
 
 在启动钓鱼器之前应手动走到钓鱼点，选择鱼竿并在游戏中进入钓鱼。
 
-按Alt+V进入钓鱼，Alt+X退出钓鱼。
+按Alt+V启动hutaofisher，Alt+X停止fisher。
 
 提示音依照音阶顺序依次为：
 
@@ -162,11 +158,11 @@ Run HutaoFisher.exe before launch the game.
 
 You can set in config.json whether to useGPU inference (useGPU), whether to log all images (logAllImgs) (images on error will always be output, but other image logging can be turned off), whether to log casting data to help optimize casting decisions (logData) (if this is yes, Alt+Tab will be required to cut out after a failed cast) If yes, you need to Alt+Tab to enter the reason for the error after a failed cast), and whether to catch a certain type of fish (typeToFish). See help.txt for the meaning of the specific config.json.
 
-Run the game in full screen mode with a 16:9 aspect ratio (important!).
+The game interface should have a 16:9 aspect ratio (important!).
 
 Before starting the fisher, you should manually walk to the fishing place, select a fishing rod and enter fishing in the game.
 
-Press Alt+V to start fishing and Alt+X to exit fishing.
+Press Alt+V to activate hutaofisher and Alt+X to stop hutaofisher.
 
 The beeps are in order of scale:
 
