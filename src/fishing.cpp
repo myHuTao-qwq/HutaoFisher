@@ -301,13 +301,13 @@ void Fisher::getBBoxes(bool cover) {
     }
   }
 
-#ifdef DATA_COLLECT
-  // 1/50 probility to randomly record image
-  std::uniform_int_distribution<int> intDist(1, 1);
-  if (intDist(random_engine) == 1) {
-    imgLog("random", true);
-  }
-#endif
+  // #ifdef DATA_COLLECT
+  //   // 1/50 probility to randomly record image
+  //   std::uniform_int_distribution<int> intDist(1, 50);
+  //   if (intDist(random_engine) == 1) {
+  //     imgLog("random", true);
+  //   }
+  // #endif
 
   checkWorking();
   return;
@@ -761,11 +761,15 @@ void Fisher::checkBite() {
     bool record = true;  // to guarentee the recorded fish is the biting fish
 
     for (auto i = bboxes.begin(); i < bboxes.end(); i++) {
-      if (i->label > NON_FISH_CLASS_NUM && !bboxEqual(targetFish, *i) &&
+      if (i->label >= NON_FISH_CLASS_NUM && !bboxEqual(targetFish, *i) &&
           baitList[label2fish.at(targetFish.label)] ==
               baitList[label2fish.at(i->label)]) {
-        record = false;
-        break;
+        if (i->label == 5 && targetFish.label == 6) {  // koi and koi_head
+          continue;
+        } else {
+          record = false;
+          break;
+        }
       }
     }
 
@@ -773,8 +777,8 @@ void Fisher::checkBite() {
       if (biteSuccess) {
         biteState = 0;
       } else {
-        Beep(C4, 125);
-        Beep(A3, 125);
+        Beep(C4, 250);
+        Beep(A3, 250);
         printf(
             "enter fail reason: 0-succeed, 1-too close, 2-too far, other-don't "
             "save\n");
@@ -873,6 +877,8 @@ void Fisher::control() {
 
   int lastLeftEdgePos = -1, lastRightEdgePos = -1, lastCursorPos = -1;
   bool first = true, matching_err = false;
+
+  bool holding = false;
 
   cv::Mat controlBox, progressRing;
 
@@ -1024,9 +1030,15 @@ void Fisher::control() {
     if (double(cursorPos - leftEdgePos) /
             double(rightEdgePos - leftEdgePos + 1) <
         0.4) {
-      mouseEvent(MOUSEEVENTF_LEFTDOWN, 0, 0);
+      if (!holding) {
+        holding = true;
+        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+      }
     } else {
-      mouseEvent(MOUSEEVENTF_LEFTUP, 0, 0);
+      if (holding) {
+        holding = false;
+        mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      }
     }
   }
 
@@ -1060,10 +1072,12 @@ void Fisher::imgLog(char name[], bool bbox, int logTime) {
     cv::Mat bboxed_img = draw_bboxes(screenImage, bboxes, effect_roi);
     char bbox_filename[256];
     double ratio = double(screen->m_width) / double(processShape[0]);
-    cv::putText(bboxed_img, "target: " + typeNames[targetFish.label],
-                cv::Point(int(50 * ratio), int(50 * ratio)),
-                cv::FONT_HERSHEY_SIMPLEX, ratio, cv::Scalar(0, 0, 255),
-                int(2 * ratio));
+    if (targetFish.label != -1) {
+      cv::putText(bboxed_img, "target: " + typeNames[targetFish.label],
+                  cv::Point(int(50 * ratio), int(50 * ratio)),
+                  cv::FONT_HERSHEY_SIMPLEX, ratio, cv::Scalar(0, 0, 255),
+                  int(2 * ratio));
+    }
     sprintf_s(bbox_filename, "%s\\images\\%d_%s_bbox.jpg", logPath.c_str(),
               logTime, name);
     writer.addImage(bbox_filename, bboxed_img);
