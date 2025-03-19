@@ -17,6 +17,10 @@ If your operating system is Windows 11, you need to turn off [Optimizations for 
 
 ## 功能更新 Functional Update
 
+#### 2025/3/20
+
+- 修复了原神版本更新ui变化导致的错误 感谢 @soondro2266 和 @tigra323
+
 #### 2024/8/14
 
 - 再次优化了确定最佳张力区的模板匹配过程, 提高拉扯的稳定性
