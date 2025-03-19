@@ -8,6 +8,11 @@
 
 如遇程序闪退问题，请尝试安装[VC++ Redistributable package](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
+If the program crashes unexpectedly, please attempt to install the [VC++ Redistributable Package](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+
+如果你的操作系统为Windows 11, 那么截图器正常工作需要关闭[窗口化游戏优化](https://support.microsoft.com/zh-cn/windows/windows-11-%E4%B8%AD%E7%AA%97%E5%8F%A3%E5%8C%96%E6%B8%B8%E6%88%8F%E7%9A%84%E4%BC%98%E5%8C%96-3f006843-2c7e-4ed0-9a5e-f9389e535952).
+
+If your operating system is Windows 11, you need to turn off [Optimizations for Windowed Games](https://support.microsoft.com/en-us/windows/optimizations-for-windowed-games-in-windows-11-3f006843-2c7e-4ed0-9a5e-f9389e535952) for the screenshoter to work properly.
 
 
 ## 功能更新 Functional Update
