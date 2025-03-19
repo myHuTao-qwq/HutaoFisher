@@ -717,7 +717,7 @@ void Fisher::checkBite() {
     cv::cvtColor(throwImage, gray, cv::COLOR_BGR2GRAY);
     cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
     // the position of hook icon
-    cv::Canny(resized(cv::Rect(850, 508, 41, 41)), edge, 200, 400);
+    cv::Canny(resized(cv::Rect(839, 508, 41, 41)), edge, 200, 400);
     if (cv::PSNR(edge, hookImg) > 10) {
       throwRodSuccess = true;
       break;
@@ -744,7 +744,7 @@ void Fisher::checkBite() {
     cv::cvtColor(biteImage, gray, cv::COLOR_BGR2GRAY);
     cv::resize(gray, resized, cv::Size(processShape[0], processShape[1]));
     // the position of hook icon too
-    cv::Canny(resized(cv::Rect(850, 508, 41, 41)), edge, 100, 200);
+    cv::Canny(resized(cv::Rect(839, 508, 41, 41)), edge, 100, 200);
     if (cv::PSNR(edge, pullImg) > 8.5) {  // a carefully selected value :)
       biteSuccess = true;
       biteTime = double(clock() - startTime) / CLOCKS_PER_SEC;
